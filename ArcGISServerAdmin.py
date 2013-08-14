@@ -1,6 +1,14 @@
-# This script has a number of functions to make use of the server admin API
+#-------------------------------------------------------------
+# Name:       ArcGIS Server Admin
+# Purpose:    This script has a number of functions to make use of the server admin API.          
+# Author:     Shaun Weston (shaun.weston@splicegroup.co.nz)
+# Created:    07/08/2013
+# Copyright:   (c) Splice Group
+# ArcGIS Version:   10.1/10.2
+# Python Version:   2.7
+#--------------------------------
 
-# Required imports
+# Import modules and enable data to be overwritten
 import urllib
 import urllib2
 import httplib
@@ -10,7 +18,6 @@ import os
 import datetime
 import time
 import arcpy
-
 arcpy.env.overwriteOutput = True
               
 #Re-usable function to get a token required for Admin changes

@@ -1,17 +1,24 @@
---- Start all services ---
-"C:\PYTHON27\ArcGIS10.1\python.exe" "C:\Data\Scripts\Splice Server Admin Toolkit\agsAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup start all
+--- Set these up as a .bat file and set as a windows scheduled task ---
 
---- Stop all services ---
-"C:\PYTHON27\ArcGIS10.1\python.exe" "C:\Data\Scripts\Splice Server Admin Toolkit\agsAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup stop all
+REM --- Start all services ---
+"C:\PYTHON27\ArcGIS10.2\python.exe" "C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\ArcGISServerAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup start all
 
---- Stop a service ---
-"C:\PYTHON27\ArcGIS10.1\python.exe" "C:\Data\Scripts\Splice Server Admin Toolkit\agsAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup stop SampleWorldCities.MapServer
+REM --- Stop all services ---
+"C:\PYTHON27\ArcGIS10.2\python.exe" "C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\ArcGISServerAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup stop all
 
---- List all services ---
-"C:\PYTHON27\ArcGIS10.1\python.exe" "C:\Data\Scripts\Splice Server Admin Toolkit\agsAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup list
+REM --- Stop a service ---
+"C:\PYTHON27\ArcGIS10.2\python.exe" "C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\ArcGISServerAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup stop SampleWorldCities.MapServer
 
---- Get map service stats report ---
-"C:\PYTHON27\ArcGIS10.1\python.exe" "C:\Data\Scripts\Splice Server Admin Toolkit\agsAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup serviceStats C:\Data\Admin\MapServicesStats.txt
+REM --- List all services ---
+"C:\PYTHON27\ArcGIS10.2\python.exe" "C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\ArcGISServerAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup list
 
---- Map service request extents ---
-"C:\PYTHON27\ArcGIS10.1\python.exe" "C:\Data\Scripts\Splice Server Admin Toolkit\agsAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup logFC Cadastral/Parcels.MapServer C:\Data\Admin\AdminData.gdb ExtentsFC ExtentsRaster
+REM --- Get map service stats report ---
+"C:\PYTHON27\ArcGIS10.2\python.exe" "C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\ArcGISServerAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup serviceStats C:\Data\Admin\MapServicesStats.txt
+
+REM --- Map service request extents ---
+"C:\PYTHON27\ArcGIS10.2\python.exe" "C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\ArcGISServerAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup logFC Cadastral/Parcels.MapServer C:\Data\Admin\AdminData.gdb ExtentsFC ExtentsRaster
+
+REM ----- Geodatabase - Update & Compress -----
+C:\Python27\ArcGIS10.1\python "C:\Data\Tools & Scripts\Server Admin Toolkit\Geodatabase-UpdateCompress.py" ^
+ "C:\Data\Tools & Scripts\Server Admin Toolkit\Logs\Geodatabase-UpdateCompress.log"  ^
+ "C:\Data\Database Connections\Northland GIS (Admin).sde"
