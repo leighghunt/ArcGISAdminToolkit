@@ -1,22 +1,17 @@
-#ArcGIS Server Admin Toolkit
+# ArcGIS Admin Toolkit
 
 
-[](View it live)
 
-[](Screenshot)
+![Screenshot](/Screenshot.jpg)
 
 
 ## Features
 
-
-## Instructions
-
-1. Fork and then clone the repo or download the .zip file. 
-2. Run and try the examples.
-
+* 
 
 ## Requirements
 
+* 
 
 ## Resources
 

@@ -20,7 +20,7 @@ import time
 import arcpy
 arcpy.env.overwriteOutput = True
               
-#Re-usable function to get a token required for Admin changes
+# Re-usable function to get a token required for admin changes
 def gentoken(server, port, adminUser, adminPass, expiration=60):
     
     query_dict = {'username':   adminUser,
@@ -79,7 +79,7 @@ def stopStartServices(server, port, adminUser, adminPass, stopStart, serviceList
     
     return 
        
-
+# Function to create feature class from extents queried
 def generateFCExtent(server, port, adminUser, adminPass, logFC, mapService, workspace, featureClass, raster, token=None):
 
     millisecondsToQuery = 6048000000 # One week 
@@ -231,7 +231,7 @@ def generateFCExtent(server, port, adminUser, adminPass, logFC, mapService, work
         
         return
 
-#A function to query service for Extent and Spatial Reference details
+# Function to query service for Extent and Spatial Reference details
 def getFullExtent( serverName, serverPort, serviceURL):
     # Supply the return format
     params = urllib.urlencode({'f': 'json'})
@@ -272,7 +272,7 @@ def getFullExtent( serverName, serverPort, serviceURL):
     
     return
 
-#A function to create new Featureclass and return an Insert Cursor, used to store Map Query Extents.
+# Function to create new feature class and return an Insert Cursor, used to store map query extents.
 def openCursor( workspace, featureclassName, srid):
     if not arcpy.Exists( workspace):
         print "Unable to find Workspace '{0}'...".format( workspace)
@@ -293,7 +293,7 @@ def openCursor( workspace, featureclassName, srid):
     print "  Opening Insert Cursor..."
     return arcpy.InsertCursor( Featureclass)
 
-#A function that checks that the input JSON object
+# Function that checks that the input JSON object
 # is not an error object.
 def assertJsonSuccess(data):
     obj = json.loads(data)

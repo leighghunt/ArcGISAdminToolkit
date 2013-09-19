@@ -55,7 +55,7 @@ def gotoFunction(logFile,mapService,featureClass): # Get parameters from ArcGIS 
                 for key, value in mapServiceQueryJSONData["features"][count]["attributes"].iteritems():
                     # Add new field
                     if key.lower() <> "objectid":
-                        arcpy.AddField_management(featureClass, key, "TEXT", "", "", "1000")
+                        arcpy.AddField_management(featureClass, key, "TEXT", "", "", "5000")
                         # Insert value into field
                         cursor = arcpy.UpdateCursor(featureClass)
                         for row in cursor:
