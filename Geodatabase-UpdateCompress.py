@@ -19,7 +19,7 @@ arcpy.env.overwriteOutput = True
 
 # Set variables
 logInfo = "true"
-logFile = r"C:\Data\Tools & Scripts\ArcGIS Admin Toolkit\Logs\Geodatabase-UpdateCompress.log"
+logFile = r"C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\Logs\Geodatabase-UpdateCompress.log"
 sendEmail = "false"
 output = None
 
@@ -74,21 +74,22 @@ def mainFunction(geodatabase): # Get parameters from ArcGIS Desktop tool by sepe
         pass
     # If arcpy error
     except arcpy.ExecuteError:
+        # Show the message
+        arcpy.AddMessage(arcpy.GetMessages(2))        
         # Log error
         if logInfo == "true":  
             loggingFunction(logFile,"error",arcpy.GetMessages(2))
     # If python error
     except Exception as e:
+        # Show the message
+        arcpy.AddMessage(e.args[0])         
         # Log error
         if logInfo == "true":         
             loggingFunction(logFile,"error",e.args[0])
 # End of main function
 
 # Start of logging function
-def loggingFunction(logFile,result,info):
-    # Show the message
-    arcpy.AddMessage(info)
-    
+def loggingFunction(logFile,result,info):   
     #Get the time/date
     setDateTime = datetime.datetime.now()
     currentDateTime = setDateTime.strftime("%d/%m/%Y - %H:%M:%S")
@@ -110,10 +111,10 @@ def loggingFunction(logFile,result,info):
         if sendEmail == "true":
             arcpy.AddMessage("Sending email...")
             # Receiver email address
-            to = 'shaun.weston@splicegroup.co.nz'
+            to = ''
             # Sender email address and password
-            gmail_user = 'mdcgisserver@gmail.com'
-            gmail_pwd = 'Spl1ceGroup'
+            gmail_user = ''
+            gmail_pwd = ''
             # Server and port information
             smtpserver = smtplib.SMTP("smtp.gmail.com",587) 
             smtpserver.ehlo()
@@ -122,8 +123,8 @@ def loggingFunction(logFile,result,info):
             # Login
             smtpserver.login(gmail_user, gmail_pwd)
             # Email content
-            header = 'To:' + to + '\n' + 'From: ' + gmail_user + '\n' + 'Subject:MDC GIS Server Error \n'
-            msg = header + '\n' + 'The geodatabase update and compress python script on the Masterton GIS Server failed...' + '\n' + '\n' + info
+            header = 'To:' + to + '\n' + 'From: ' + gmail_user + '\n' + '\n'
+            msg = header + '\n' + '' + '\n' + '\n' + info
             # Send the email and close the connection
             smtpserver.sendmail(gmail_user, to, msg)
             smtpserver.close()                
