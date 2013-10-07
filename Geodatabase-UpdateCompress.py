@@ -1,9 +1,9 @@
 #-------------------------------------------------------------
 # Name:       Geodatabase - Update and Compress
-# Purpose:    Will compress geodatabase and update statistics.          
+# Purpose:    Will compress geodatabase, update statistics and rebuild tables indexes.         
 # Author:     Shaun Weston (shaun.weston@splicegroup.co.nz)
 # Date Created:    07/08/2013
-# Last Updated:    19/09/2013
+# Last Updated:    08/10/2013
 # Copyright:   (c) Splice Group
 # ArcGIS Version:   10.1/10.2
 # Python Version:   2.7
@@ -19,8 +19,8 @@ arcpy.env.overwriteOutput = True
 
 # Set variables
 logInfo = "true"
-logFile = r"C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\Logs\Geodatabase-UpdateCompress.log"
-sendEmail = "false"
+logFile = r"C:\Data\Tools & Scripts\ArcGIS Admin Toolkit\Logs\Geodatabase-UpdateCompress.log"
+sendEmail = "true"
 output = None
 
 # Start of main function
@@ -55,7 +55,12 @@ def mainFunction(geodatabase): # Get parameters from ArcGIS Desktop tool by sepe
         # Execute analyze datasets
         arcpy.AddMessage("Analyzing and updating the database statistics....")
         # Note: to use the "SYSTEM" option the workspace user must be an administrator.
-        arcpy.AnalyzeDatasets_management(geodatabase, "SYSTEM", dataList, "ANALYZE_BASE","ANALYZE_DELTA","ANALYZE_ARCHIVE")
+        arcpy.AnalyzeDatasets_management(geodatabase, "SYSTEM", userDataList, "ANALYZE_BASE","ANALYZE_DELTA","ANALYZE_ARCHIVE")
+
+        # Execute rebuild indexes
+        arcpy.AddMessage("Rebuilding the indexes for all tables in the database....")
+        # Note: to use the "SYSTEM" option the workspace user must be an administrator.
+        arcpy.RebuildIndexes_management(geodatabase, "SYSTEM", userDataList, "ALL")        
         # --------------------------------------- End of code --------------------------------------- #  
             
         # If called from gp tool return the arcpy parameter   
@@ -82,14 +87,14 @@ def mainFunction(geodatabase): # Get parameters from ArcGIS Desktop tool by sepe
     # If python error
     except Exception as e:
         # Show the message
-        arcpy.AddMessage(e.args[0])         
+        arcpy.AddMessage(e.args[0])          
         # Log error
         if logInfo == "true":         
             loggingFunction(logFile,"error",e.args[0])
 # End of main function
 
 # Start of logging function
-def loggingFunction(logFile,result,info):   
+def loggingFunction(logFile,result,info):
     #Get the time/date
     setDateTime = datetime.datetime.now()
     currentDateTime = setDateTime.strftime("%d/%m/%Y - %H:%M:%S")
@@ -111,10 +116,10 @@ def loggingFunction(logFile,result,info):
         if sendEmail == "true":
             arcpy.AddMessage("Sending email...")
             # Receiver email address
-            to = ''
+            to = 'shaun.weston@splicegroup.co.nz'
             # Sender email address and password
-            gmail_user = ''
-            gmail_pwd = ''
+            gmail_user = 'mdcgisserver@gmail.com'
+            gmail_pwd = 'Spl1ceGroup'
             # Server and port information
             smtpserver = smtplib.SMTP("smtp.gmail.com",587) 
             smtpserver.ehlo()
@@ -123,8 +128,8 @@ def loggingFunction(logFile,result,info):
             # Login
             smtpserver.login(gmail_user, gmail_pwd)
             # Email content
-            header = 'To:' + to + '\n' + 'From: ' + gmail_user + '\n' + '\n'
-            msg = header + '\n' + '' + '\n' + '\n' + info
+            header = 'To:' + to + '\n' + 'From: ' + gmail_user + '\n' + 'Subject:MDC GIS Server Error \n'
+            msg = header + '\n' + 'The geodatabase update and compress python script on the Masterton GIS Server failed...' + '\n' + '\n' + info
             # Send the email and close the connection
             smtpserver.sendmail(gmail_user, to, msg)
             smtpserver.close()                
