@@ -20,11 +20,9 @@ REM --- Map service request extents ---
 
 REM ----- Geodatabase - Update & Compress -----
 C:\Python27\ArcGIS10.1\python "C:\Data\Tools & Scripts\Server Admin Toolkit\Geodatabase-UpdateCompress.py" ^
- "C:\Data\Tools & Scripts\Server Admin Toolkit\Logs\Geodatabase-UpdateCompress.log"  ^
  "C:\Data\Database Connections\Northland GIS (Admin).sde"
 
-REM --- Download SLUR data from GWRC ---
+REM --- Download data from Map Service ---
 c:\python27\arcgis10.1\python "C:\Data\Tools & Scripts\ArcGIS Admin Toolkit\MapServiceDownload.py" ^
- "C:\Data\Tools & Scripts\ArcGIS Admin Toolkit\Logs\MapServiceDownload.log"  ^
  "http://mapping.gw.govt.nz/ArcGIS/rest/services/WFS/SLUR_TA_WFS_RELEASED/MapServer/0" ^
  "Database Connections\GIS_Shared.sde\GIS_Shared.SDEADMIN.SLUR"

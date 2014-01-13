@@ -1,12 +1,12 @@
 #-------------------------------------------------------------
 # Name:       Map Service Download
 # Purpose:    Downloads the data used in a map service layer by querying the json
-# and converting to a feature class.        
-# Author:     Shaun Weston (shaun.weston@splicegroup.co.nz)
+#             and converting to a feature class.        
+# Author:     Shaun Weston (shaun_weston@eagle.co.nz)
 # Date Created:    14/08/2013
 # Last Updated:    20/09/2013
-# Copyright:   (c) Splice Group
-# ArcGIS Version:   10.1/10.2
+# Copyright:   (c) Eagle Technology
+# ArcGIS Version:   10.1+
 # Python Version:   2.7
 #--------------------------------
 
@@ -25,6 +25,11 @@ arcpy.env.overwriteOutput = True
 logInfo = "true"
 logFile = r"C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\Logs\MapServiceDownload.log"
 sendEmail = "false"
+emailTo = ""
+emailUser = ""
+emailPassword = ""
+emailSubject = ""
+emailMessage = ""
 output = None
 
 # Start of main function
@@ -116,7 +121,7 @@ def mainFunction(mapService,featureClass): # Get parameters from ArcGIS Desktop 
 # End of main function
 
 # Start of logging function
-def loggingFunction(logFile,result,info):  
+def loggingFunction(logFile,result,info):
     #Get the time/date
     setDateTime = datetime.datetime.now()
     currentDateTime = setDateTime.strftime("%d/%m/%Y - %H:%M:%S")
@@ -128,34 +133,32 @@ def loggingFunction(logFile,result,info):
     if result == "end":
         with open(logFile, "a") as f:
             f.write("\n" + "Process ended at " + currentDateTime + "\n")
-            f.write("---" + "\n")        
+            f.write("---" + "\n")
+    if result == "warning":
+        with open(logFile, "a") as f:
+            f.write("\n" + "Warning: " + info)               
     if result == "error":
         with open(logFile, "a") as f:
             f.write("\n" + "Process ended at " + currentDateTime + "\n")
-            f.write("There was an error: " + info + "\n")        
+            f.write("Error: " + info + "\n")        
             f.write("---" + "\n")
         # Send an email
         if sendEmail == "true":
             arcpy.AddMessage("Sending email...")
-            # Receiver email address
-            to = ''
-            # Sender email address and password
-            gmail_user = ''
-            gmail_pwd = ''
             # Server and port information
             smtpserver = smtplib.SMTP("smtp.gmail.com",587) 
             smtpserver.ehlo()
             smtpserver.starttls() 
             smtpserver.ehlo
-            # Login
-            smtpserver.login(gmail_user, gmail_pwd)
+            # Login with sender email address and password
+            smtpserver.login(emailUser, emailPassword)
             # Email content
-            header = 'To:' + to + '\n' + 'From: ' + gmail_user + '\n' + '\n'
-            msg = header + '\n' + '' + '\n' + '\n' + info
+            header = 'To:' + emailTo + '\n' + 'From: ' + emailUser + '\n' + 'Subject:' + emailSubject + '\n'
+            message = header + '\n' + emailMessage + '\n' + '\n' + info
             # Send the email and close the connection
-            smtpserver.sendmail(gmail_user, to, msg)
-            smtpserver.close()                  
-# End of logging function    
+            smtpserver.sendmail(emailUser, emailTo, message)
+            smtpserver.close()                
+# End of logging function     
 
 # This test allows the script to be used from the operating
 # system command prompt (stand-alone), in a Python IDE, 

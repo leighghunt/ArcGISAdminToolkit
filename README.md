@@ -1,27 +1,43 @@
 # ArcGIS Admin Toolkit
 
+The ArcGIS admin toolkit contains a number of tools and scripts to administer ArcGIS Server and Desktop. The following tools are available:
 
+#### Geodatabase - Update & Compress
+Will compress geodatabase, update statistics and rebuild tables indexes.
 
-![Screenshot](/Screenshot.jpg)
+#### Map Service Download
+Downloads the data used in a map service layer by querying the json and converting to a feature class.
+
+#### Cache Map Service
+
 
 
 ## Features
 
-* 
+* Automate the administration process.
+* Download data from a map service.
+* Maintain geodatabase performance.
+
 
 ## Requirements
 
-* 
+* ArcGIS for Desktop 10.1+
+* ArcGIS for Server 10.1+
+
 
 ## Resources
 
-* [Blog](http://westonelli.wordpress.com)
+* [LinkedIn](http://www.linkedin.com/in/sfweston)
+* [GitHub](https://github.com/WestonSF)
 * [Twitter](https://twitter.com/Westonelli)
+* [Blog](http://westonelli.wordpress.com)
+* [ArcGIS Blog](http://blogs.esri.com/esri/arcgis)
+* [Python for ArcGIS](http://resources.arcgis.com/en/communities/python)
 
 
 ## Issues
 
-Find a bug or want to request a new feature?  Please let us know by submitting an issue.
+Find a bug or want to request a new feature?  Please let me know by submitting an issue.
 
 
 ## Contributing
@@ -30,7 +46,7 @@ Anyone and everyone is welcome to contribute.
 
 
 ## Licensing
-Copyright 2013 Shaun Weston
+Copyright 2014 - haun Weston
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

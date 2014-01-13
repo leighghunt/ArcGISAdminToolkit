@@ -1,9 +1,10 @@
 #-------------------------------------------------------------
-# Name:       Geodatabase - Update and Compress
-# Purpose:    Will compress geodatabase, update statistics and rebuild tables indexes.         
+# Name:       Cache Map Service
+# Purpose:    Caches a map service at specified scales and reports on progress. Ability to also
+#             pause/resume caching at a specified time.
 # Author:     Shaun Weston (shaun_weston@eagle.co.nz)
-# Date Created:    07/08/2013
-# Last Updated:    08/10/2013
+# Date Created:    14/01/2014
+# Last Updated:    14/01/2014
 # Copyright:   (c) Eagle Technology
 # ArcGIS Version:   10.1+
 # Python Version:   2.7
@@ -19,7 +20,7 @@ arcpy.env.overwriteOutput = True
 
 # Set variables
 logInfo = "true"
-logFile = r"C:\Data\Tools & Scripts\ArcGIS Admin Toolkit\Logs\Geodatabase-UpdateCompress.log"
+logFile = r"C:\Data\Tools & Scripts\ArcGIS Admin Toolkit\Logs\CacheMapService.log"
 sendEmail = "false"
 emailTo = ""
 emailUser = ""
@@ -29,43 +30,14 @@ emailMessage = ""
 output = None
 
 # Start of main function
-def mainFunction(geodatabase): # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)  
+def mainFunction(mapService): # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)  
     try:
         # Log start
         if logInfo == "true":
             loggingFunction(logFile,"start","")
 
         # --------------------------------------- Start of code --------------------------------------- #        
-        # Compress the geodatabase
-        arcpy.AddMessage("Compressing the database....")
-        arcpy.env.workspace = geodatabase
-        arcpy.Compress_management(geodatabase)
-
-        # Load in datsets to a list
-        dataList = arcpy.ListTables() + arcpy.ListFeatureClasses() + arcpy.ListDatasets()
-        # Load in datasets from feature datasets to the list
-        for dataset in arcpy.ListDatasets("", "Feature"):
-            arcpy.env.workspace = os.path.join(geodatabase,dataset)
-            dataList += arcpy.ListFeatureClasses() + arcpy.ListDatasets()
-
-        # Reset the workspace
-        arcpy.env.workspace = geodatabase
-
-        # Get the user name for the workspace
-        userName = arcpy.Describe(geodatabase).connectionProperties.user.lower()
-
-        # Remove any datasets that are not owned by the connected user.
-        userDataList = [ds for ds in dataList if ds.lower().find(".%s." % userName) > -1]        
-
-        # Execute analyze datasets
-        arcpy.AddMessage("Analyzing and updating the database statistics....")
-        # Note: to use the "SYSTEM" option the workspace user must be an administrator.
-        arcpy.AnalyzeDatasets_management(geodatabase, "SYSTEM", userDataList, "ANALYZE_BASE","ANALYZE_DELTA","ANALYZE_ARCHIVE")
-
-        # Execute rebuild indexes
-        arcpy.AddMessage("Rebuilding the indexes for all tables in the database....")
-        # Note: to use the "SYSTEM" option the workspace user must be an administrator.
-        arcpy.RebuildIndexes_management(geodatabase, "SYSTEM", userDataList, "ALL")        
+  
         # --------------------------------------- End of code --------------------------------------- #  
             
         # If called from gp tool return the arcpy parameter   
@@ -136,7 +108,7 @@ def loggingFunction(logFile,result,info):
             # Send the email and close the connection
             smtpserver.sendmail(emailUser, emailTo, message)
             smtpserver.close()                
-# End of logging function   
+# End of logging function     
 
 # This test allows the script to be used from the operating
 # system command prompt (stand-alone), in a Python IDE, 
