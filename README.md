@@ -9,7 +9,10 @@ Will compress geodatabase, update statistics and rebuild tables indexes.
 Downloads the data used in a map service layer by querying the json and converting to a feature class.
 
 #### Cache Map Service
+Caches a map service at specified scales and reports on progress. Ability to also pause/resume caching at a specified time.
 
+#### Convert to CSV
+Converts a table or feature class to a CSV file. Optionally adds in header and footer records also.
 
 
 ## Features

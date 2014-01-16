@@ -19,7 +19,7 @@ arcpy.env.overwriteOutput = True
 
 # Set variables
 logInfo = "true"
-logFile = r"C:\Data\Tools & Scripts\ArcGIS Admin Toolkit\Logs\Geodatabase-UpdateCompress.log"
+logFile = r"C:\Development\Projects\ArcGIS Admin Toolkit\Logs\Geodatabase-UpdateCompress.log"
 sendEmail = "false"
 emailTo = ""
 emailUser = ""

@@ -20,7 +20,7 @@ arcpy.env.overwriteOutput = True
 
 # Set variables
 logInfo = "true"
-logFile = r"C:\Data\Tools & Scripts\ArcGIS Admin Toolkit\Logs\CacheMapService.log"
+logFile = r"C:\Development\Projects\ArcGIS Admin Toolkit\Logs\CacheMapService.log"
 sendEmail = "false"
 emailTo = ""
 emailUser = ""
@@ -30,14 +30,28 @@ emailMessage = ""
 output = None
 
 # Start of main function
-def mainFunction(mapService): # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)  
+def mainFunction(mapService,updateMode,tileScheme): # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)  
     try:
         # Log start
         if logInfo == "true":
             loggingFunction(logFile,"start","")
 
-        # --------------------------------------- Start of code --------------------------------------- #        
-  
+        # --------------------------------------- Start of code --------------------------------------- #
+        
+        # If new cache
+        if updateMode == "New":
+            arcpy.CreateMapServerCache_server(mapService, tileScheme, "PREDEFINED", "", "", "", "", "", "0 0", "", "", "0", "COMPACT")
+
+        # If existing cache to create all tiles
+        if updateMode == "Existing - Recreate All Tiles":
+            # Rebuild the map cache
+            arcpy.ManageMapServerCacheTiles_server(mapService, "", "RECREATE_ALL_TILES", "", "", "", "WAIT")
+            
+        # If existing cache to create empty tiles
+        if updateMode == "Existing - Recreate Empty Tiles":
+            # Rebuild the map cache
+            arcpy.ManageMapServerCacheTiles_server(mapService, "", "RECREATE_ALL_TILES", "", "", "", "WAIT")
+      
         # --------------------------------------- End of code --------------------------------------- #  
             
         # If called from gp tool return the arcpy parameter   

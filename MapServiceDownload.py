@@ -23,7 +23,7 @@ arcpy.env.overwriteOutput = True
 
 # Set variables
 logInfo = "true"
-logFile = r"C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\Logs\MapServiceDownload.log"
+logFile = r"C:\Development\Projects\ArcGIS Admin Toolkit\Logs\MapServiceDownload.log"
 sendEmail = "false"
 emailTo = ""
 emailUser = ""
