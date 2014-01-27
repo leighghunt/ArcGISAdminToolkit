@@ -11,9 +11,8 @@ Downloads the data used in a map service layer by querying the json and converti
 #### Cache Map Service
 Caches a map service at specified scales and reports on progress. Ability to also pause/resume caching at a specified time.
 
-#### Convert to CSV
-Converts a table or feature class to a CSV file. Optionally adds in header and footer records also.
-
+#### Backup and Restore ArcGIS Server Site
+Backs up or restores an ArcGIS Server site.
 
 ## Features
 
