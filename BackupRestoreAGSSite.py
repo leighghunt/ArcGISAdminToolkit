@@ -3,7 +3,7 @@
 # Purpose:    Backs up and/or restores and ArcGIS server site.     
 # Author:     Shaun Weston (shaun_weston@eagle.co.nz)
 # Date Created:    27/01/2014
-# Last Updated:    27/01/2014
+# Last Updated:    28/01/2014
 # Copyright:   (c) Eagle Technology
 # ArcGIS Version:   10.2+
 # Python Version:   2.7
@@ -57,12 +57,19 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
         if not context.endswith('admin/'):
             context += 'admin/'
 
+        # Create new site if necessary
+        siteResult = createSite(serverName,username,password)
+
+        # If site not created        
+        if siteResult == -1:        
+            arcpy.AddMessage("Site already created...")
+
         # Get token url
         tokenURL = context + "generateToken"
 
         # Get token
         token = getToken(serverName, serverPort, protocol, tokenURL, username, password)
-
+    
         # If token is blank
         if token == None:
             return -1
@@ -144,31 +151,31 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
                         for message in messages:
                             if ('Import operation completed in ' in message['message'] and message['level'] == 'INFO' and result['source'] == 'SITE') :
                                 restoreOpTime = message['message']
-                                arcpy.AddMessage("ArcGIS Server site has been successfully restored." + message['message'])
+                                arcpy.AddMessage("ArcGIS Server site has been successfully restored. " + message['message'])
                             else:
                                 msgList.append(message['message'])  
                     
                     # User wants the report generated from the restore utility to be saved to a file in addition to writing the messages to the console        
-                    if restoreReport is not None:
+                    if (len(restoreReport) > 0):
                         try:
-                                reportFile = codecs.open(os.path.join(restoreReport), 'w', 'utf-8-sig')
-                                reportFile.write("Site has been successfully restored. " + restoreOpTime)
-                                reportFile.write('\n\n')
-                                if (len(msgList) > 0):
-                                    reportFile.write("Below are the messages returned from the restore operation. You should review these messages and update your site configuration as needed:")
-                                    reportFile.write('\n')
-                                    reportFile.write("-------------------------------------------------------------------------------------------------------------------------------------")
-                                    reportFile.write('\n')
-                                    count = 1
-                                    for msg in msgList:
-                                        reportFile.write(str(count)+ "." + msg)
-                                        reportFile.write('\n\n')
-                                        count = count + 1
-                                reportFile.close()
-                                arcpy.AddMessage("A file with the report from the restore utility has been saved at: " + restoreReport) 
+                            reportFile = codecs.open(os.path.join(restoreReport), 'w', 'utf-8-sig')
+                            reportFile.write("Site has been successfully restored. " + restoreOpTime)
+                            reportFile.write('\n\n')
+                            if (len(msgList) > 0):
+                                reportFile.write("Below are the messages returned from the restore operation. You should review these messages and update your site configuration as needed:")
+                                reportFile.write('\n')
+                                reportFile.write("-------------------------------------------------------------------------------------------------------------------------------------")
+                                reportFile.write('\n')
+                                count = 1
+                                for msg in msgList:
+                                    reportFile.write(str(count)+ "." + msg)
+                                    reportFile.write('\n\n')
+                                    count = count + 1
+                            reportFile.close()
+                            arcpy.AddMessage("A file with the report from the restore utility has been saved at: " + restoreReport) 
                         except:
-                                arcpy.AddError("Unable to save the report file at: " + restoreReport + " Please verify this location is available.")
-                                return                    
+                            arcpy.AddError("Unable to save the report file at: " + restoreReport + " Please verify this location is available.")
+                            return                    
             else:
                 arcpy.AddError("Please define a ArcGIS Server site backup file.");
             
@@ -203,6 +210,43 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
         if logInfo == "true":         
             loggingFunction(logFile,"error",e.args[0])
 # End of main function
+
+
+# Start of create site function
+def createSite(serverName,username,password):
+    # Set server port
+    serverPort = 6080 
+
+    # Construct URL to create a new site
+    createNewSiteURL = "/arcgis/admin/createNewSite"
+        
+    # Set up parameters for the request
+    params = urllib.urlencode({'username': username, 'password': password, 'configStoreConnection': 
+    '', 'directories': '', 'runAsync': 'false', 'f': 'json'})
+    
+    headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+  
+    # Connect to URL and post parameters    
+    httpConn = httplib.HTTPConnection(serverName, serverPort)
+    httpConn.request("POST", createNewSiteURL, params, headers)
+    
+    # Read response
+    response = httpConn.getresponse()
+    if (response.status != 200):
+        httpConn.close()
+        arcpy.AddError("Error while creating the site.")
+        return -1
+    else:
+        data = response.read()
+        httpConn.close()
+        
+        # Check that data returned is not an error object
+        if not assertJsonSuccess(data):          
+            return -1
+        else:
+            arcpy.AddMessage("Site created successfully...")
+            return
+# End of create site function
 
 
 # Start of split URL function 
