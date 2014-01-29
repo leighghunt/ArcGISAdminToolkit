@@ -34,7 +34,7 @@ emailMessage = ""
 output = None
 
 # Start of main function
-def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,backupFile,restoreReport): # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)  
+def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,backupFile,restoreWebAdaptor,restoreReport): # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)  
     try:
         # Log start
         if logInfo == "true":
@@ -57,28 +57,24 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
         if not context.endswith('admin/'):
             context += 'admin/'
 
-        # Create new site if necessary
-        siteResult = createSite(serverName,username,password)
-
-        # If site not created        
-        if siteResult == -1:        
-            arcpy.AddMessage("Site already created...")
-
-        # Get token url
-        tokenURL = context + "generateToken"
-
         # Get token
-        token = getToken(serverName, serverPort, protocol, tokenURL, username, password)
-    
-        # If token is blank
-        if token == None:
-            return -1
+        token = getToken(username, password, serverName, serverPort, protocol)
 
+        # If site not created created   
+        if token == -1:
+            # Create new site
+            arcpy.AddMessage("Creating site...")
+            siteResult = createSite(username,password,serverName, serverPort, protocol)
+            # Get token
+            token = getToken(username, password, serverName, serverPort, protocol)            
+        else:    
+            arcpy.AddMessage("Site already created...")
+            
         # If backing up site
         if (backupRestore == "Backup"):
             if (len(str(backupFolder)) > 0):            
                 # Get backup url
-                backupURL = context+"exportSite"
+                backupURL = context + "exportSite"
 
                 # Setup parameters
                 backupFolder = backupFolder.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8')
@@ -87,7 +83,7 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
                 arcpy.AddMessage("Backing up the ArcGIS Server site running at " + serverName + "...")
 
                 try:
-                    # Query the server
+                    # Post to server
                     response, data = postToServer(serverName, serverPort, protocol, backupURL, params)
                 except:
                     arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
@@ -101,10 +97,11 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
                 
                 if (not assertJsonSuccess(data)):
                     arcpy.AddError("Unable to back up the ArcGIS Server site running at " + serverName)
+                    return -1                    
                 # On successful backup
                 else:
-                    dataObj = json.loads(data)
-                    arcpy.AddMessage("ArcGIS Server site has been successfully backed up and is available at this location: " + dataObj['location'] + "...")
+                    dataObject = json.loads(data)
+                    arcpy.AddMessage("ArcGIS Server site has been successfully backed up and is available at this location: " + dataObject['location'] + "...")
             else:
                 arcpy.AddError("Please define a folder for the backup to be exported to.");
             
@@ -122,7 +119,7 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
                 params = urllib.urlencode({'token': token, 'f': 'json', 'location': backupFile})
 
                 try:
-                    # Query the server
+                    # Post to server
                     response, data = postToServer(serverName, serverPort, protocol, restoreURL, params)
                 except:
                     arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
@@ -137,11 +134,12 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
                 if (not assertJsonSuccess(data)):
                     arcpy.AddError("The restore of the ArcGIS Server site " + serverName + " failed.")
                     arcpy.AddError(str(data))
+                    return -1                    
                 # On successful restore
                 else:
                     # Convert the http response to JSON object
-                    dataObj = json.loads(data)
-                    results = dataObj['result']
+                    dataObject = json.loads(data)
+                    results = dataObject['result']
                         
                     msgList = []
                     
@@ -160,22 +158,28 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
                         try:
                             reportFile = codecs.open(os.path.join(restoreReport), 'w', 'utf-8-sig')
                             reportFile.write("Site has been successfully restored. " + restoreOpTime)
-                            reportFile.write('\n\n')
+                            reportFile.write("\n\n")
                             if (len(msgList) > 0):
                                 reportFile.write("Below are the messages returned from the restore operation. You should review these messages and update your site configuration as needed:")
-                                reportFile.write('\n')
+                                reportFile.write("\n")
                                 reportFile.write("-------------------------------------------------------------------------------------------------------------------------------------")
-                                reportFile.write('\n')
+                                reportFile.write("\n")
                                 count = 1
                                 for msg in msgList:
                                     reportFile.write(str(count)+ "." + msg)
-                                    reportFile.write('\n\n')
+                                    reportFile.write("\n\n")
                                     count = count + 1
                             reportFile.close()
                             arcpy.AddMessage("A file with the report from the restore utility has been saved at: " + restoreReport) 
                         except:
                             arcpy.AddError("Unable to save the report file at: " + restoreReport + " Please verify this location is available.")
-                            return                    
+                            return
+
+                    # If restoring a web adaptor
+                    if (restoreWebAdaptor == "true"):
+                        # Register the web adaptor
+                        arcpy.AddMessage("Registering the web adaptor...")
+                        registerWebAdaptor(serverName, serverPort, protocol, token)
             else:
                 arcpy.AddError("Please define a ArcGIS Server site backup file.");
             
@@ -213,40 +217,132 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
 
 
 # Start of create site function
-def createSite(serverName,username,password):
-    # Set server port
-    serverPort = 6080 
+def createSite(username, password, serverName, serverPort, protocol):  
+    # Set up parameters for the request
+    params = urllib.urlencode({'username': username.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8'), 'password': password.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8'), 'configStoreConnection': '', 'directories': '', 'runAsync': 'false', 'f': 'json'})
 
     # Construct URL to create a new site
-    createNewSiteURL = "/arcgis/admin/createNewSite"
-        
-    # Set up parameters for the request
-    params = urllib.urlencode({'username': username, 'password': password, 'configStoreConnection': 
-    '', 'directories': '', 'runAsync': 'false', 'f': 'json'})
-    
-    headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
-  
-    # Connect to URL and post parameters    
-    httpConn = httplib.HTTPConnection(serverName, serverPort)
-    httpConn.request("POST", createNewSiteURL, params, headers)
-    
-    # Read response
-    response = httpConn.getresponse()
-    if (response.status != 200):
-        httpConn.close()
-        arcpy.AddError("Error while creating the site.")
+    url = "/arcgis/admin/createNewSite"
+
+    # Post to the server
+    try:
+        response, data = postToServer(serverName, serverPort, protocol, url, params)
+    except:
+        arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
         return -1
-    else:
-        data = response.read()
-        httpConn.close()
+
+    # If there is an error creating the site
+    if (response.status != 200):
+        arcpy.AddError("Error creating site.")
+        arcpy.AddError(str(data))
+        return -1
+    if (not assertJsonSuccess(data)):
+        return -1
+    # On successful creation
+    else: 
+        dataObject = json.loads(data)
+
+        arcpy.AddMessage("Site created successfully...")
+        return     
+# End of create site function
+
+
+# Start of register web adaptor function
+def registerWebAdaptor(serverName, serverPort, protocol, token):
+    params = urllib.urlencode({'webAdaptorURL': 'http://' + serverName + '/arcgis', 'machineName': serverName, 'isAdminEnabled': 'false', 'token': token, 'f': 'json'})
+
+    # Construct URL to register web adaptor
+    url = "/arcgis/admin/system/webadaptors/register"
+
+    # Post to the server
+    try:
+        response, data = postToServer(serverName, serverPort, protocol, url, params)
+    except:
+        arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+        return -1
+
+    # If there is an error registering web adaptor
+    if (response.status != 200):
+        arcpy.AddError("Error registering web adaptor.")
+        arcpy.AddError(str(data))
+        return -1
+    if (not assertJsonSuccess(data)):
+        arcpy.AddError("Error registering web adaptor. Please check if the server is running and ensure that the username/password provided are correct.")
+        return -1
+    # On successful registration
+    else: 
+        dataObject = json.loads(data)
+
+        arcpy.AddMessage("Web adaptor registered successfully...")
+        return     
+# End of register web adaptor function
+
+
+# Start of get token function
+def getToken(username, password, serverName, serverPort, protocol):
+    params = urllib.urlencode({'username': username.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8'), 'password': password.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8'),'client': 'referer','referer':'backuputility','f': 'json'})
+           
+    # Construct URL to get a token
+    url = "/arcgis/tokens/generateToken"
         
-        # Check that data returned is not an error object
-        if not assertJsonSuccess(data):          
+    try:
+        response, data = postToServer(serverName, serverPort, protocol, url, params)
+    except:
+        arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+        return -1    
+    # If there is an error getting the token
+    if (response.status != 200):
+        arcpy.AddError("Error while generating the token.")
+        arcpy.AddError(str(data))
+        return -1
+    if (not assertJsonSuccess(data)):
+        arcpy.AddError("Error while generating the token. Please check if the server is running and ensure that the username/password provided are correct.")
+        return -1
+    # Token returned
+    else:
+        # Extract the token from it
+        dataObject = json.loads(data)
+
+        # Return the token if available
+        if "error" in dataObject:
             return -1
         else:
-            arcpy.AddMessage("Site created successfully...")
-            return
-# End of create site function
+            return dataObject['token']
+# End of get token function
+
+
+# Start of HTTP POST request to the server function
+def postToServer(serverName, serverPort, protocol, url, params):
+    # If on standard port
+    if (serverPort == -1 and protocol == 'http'):
+        serverPort = 80
+
+    # If on secure port
+    if (serverPort == -1 and protocol == 'https'):
+        serverPort = 443
+        
+    if (protocol == 'http'):
+        httpConn = httplib.HTTPConnection(serverName, int(serverPort))
+
+    if (protocol == 'https'):
+        httpConn = httplib.HTTPSConnection(serverName, int(serverPort))
+        
+    headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain",'referer':'backuputility','referrer':'backuputility'}
+     
+    # URL encode the resource URL
+    url = urllib.quote(url.encode('utf-8'))
+
+    # Build the connection to add the roles to the server
+    httpConn.request("POST", url, params, headers) 
+
+    response = httpConn.getresponse()
+    data = response.read()
+
+    httpConn.close()
+
+    # Return response
+    return (response, data)
+# End of HTTP POST request to the server function
 
 
 # Start of split URL function 
@@ -288,81 +384,18 @@ def splitSiteURL(siteURL):
 # End of split URL function
 
 
-# Start of get token function
-def getToken(serverName, serverPort, protocol, tokenURL, username, password):
-    params = urllib.urlencode({'username': username.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8'), 'password': password.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8'),'client': 'referer','referer':'backuputility','f': 'json'})
-
-    try:
-        response, data = postToServer(serverName, serverPort, protocol, tokenURL, params)
-    except:
-        arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
-        return None    
-
-    # If there is an error getting the token
-    if (response.status != 200):
-        arcpy.AddError("Error while generating the token.")
-        arcpy.AddError(str(data))
-        return None
-    if (not assertJsonSuccess(data)):
-        arcpy.AddError("Error while generating the token. Please check if the server is running and ensure that the username/password provided are correct.")
-        return None
-    # Token returned
-    else: 
-        # Extract the token from it
-        token = json.loads(data)
-        # Return the token
-        return token['token']
-# End of get token function
-
-
-# Start of HTTP POST request to the server function
-def postToServer(serverName, serverPort, protocol, url, params):
-    # If on standard port
-    if (serverPort == -1 and protocol == 'http'):
-        serverPort = 80
-
-    # If on secure port
-    if (serverPort == -1 and protocol == 'https'):
-        serverPort = 443
-        
-    if (protocol == 'http'):
-        httpConn = httplib.HTTPConnection(serverName, int(serverPort))
-
-    if (protocol == 'https'):
-        httpConn = httplib.HTTPSConnection(serverName, int(serverPort))
-        
-    headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain",'referer':'backuputility','referrer':'backuputility'}
-     
-    # URL encode the resource URL
-    url = urllib.quote(url.encode('utf-8'))
-
-    # Build the connection to add the roles to the server
-    httpConn.request("POST", url, params, headers) 
-
-
-    response = httpConn.getresponse()
-    data = response.read()
-
-    httpConn.close()
-
-    # Return response
-    return (response, data)
-# End of HTTP POST request to the server function
-
-
-# Start of heck input JSON object function
+# Start of status check JSON object function
 def assertJsonSuccess(data):
     obj = json.loads(data)
     if 'status' in obj and obj['status'] == "error":
         if ('messages' in obj):
             errMsgs = obj['messages']
             for errMsg in errMsgs:
-                print
-                print errMsg
+                arcpy.AddError(errMsg)
         return False
     else:
         return True
-# End of check input JSON object function
+# End of status check JSON object function
 
 
 # Start of logging function
