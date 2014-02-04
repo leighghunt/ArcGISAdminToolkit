@@ -5,6 +5,8 @@
 #             - Creates a site if no site has been created, otherwise will overwrite previous site. 
 #             - Restores the license
 #             - Need to include data in map service OR make sure referenced data is in same place.
+#             - The arcgisserver directories need to be in the same file path on the restore server as the backup server.
+#             - Does not include map caches
 #             - Need to have ArcGIS for Server and ArcGIS web adaptor for IIS installed (if wanting to restore web adaptor).    
 # Author:     Shaun Weston (shaun_weston@eagle.co.nz)
 # Date Created:    27/01/2014
@@ -19,7 +21,6 @@ import os
 import sys
 import datetime
 import json
-import codecs
 import smtplib
 import httplib
 import urllib
@@ -28,9 +29,9 @@ import arcpy
 arcpy.env.overwriteOutput = True
 
 # Set variables
-logInfo = "false"
-logFile = r""
-sendEmail = "true"
+logInfo = "true"
+logFile = os.path.join(os.path.dirname(__file__), r"Logs\BackupRestoreAGSSite.log")
+sendEmail = "false"
 emailTo = ""
 emailUser = ""
 emailPassword = ""
@@ -197,25 +198,32 @@ def restoreSite(serverName, serverPort, protocol, context, token, backupFile, re
             # Convert the http response to JSON object
             dataObject = json.loads(data)
             results = dataObject['result']
-                
+
+            # Message list array                
             msgList = []
             
             restoreOpTime = ''        
             for result in results:
                 messages = result['messages']
+                # For each message in the results
                 for message in messages:
                     if ('Import operation completed in ' in message['message'] and message['level'] == 'INFO' and result['source'] == 'SITE') :
+                        # Get message operation time
                         restoreOpTime = message['message']
                         arcpy.AddMessage("ArcGIS Server site has been successfully restored. " + message['message'])
                     else:
+                        # Append in messages
                         msgList.append(message['message'])  
             
-            # User wants the report generated from the restore utility to be saved to a file in addition to writing the messages to the console        
+            # If user wants the report generated from the restore utility to be saved to a file in addition to writing the messages to the console        
             if (len(restoreReport) > 0):
                 try:
-                    reportFile = codecs.open(os.path.join(restoreReport), 'w', 'utf-8-sig')
+                    # Open report file
+                    reportFile = open(restoreReport, "w")
+                    # Write success message
                     reportFile.write("Site has been successfully restored. " + restoreOpTime)
                     reportFile.write("\n\n")
+                    # Write other messages if there are any
                     if (len(msgList) > 0):
                         reportFile.write("Below are the messages returned from the restore operation. You should review these messages and update your site configuration as needed:")
                         reportFile.write("\n")

@@ -20,7 +20,7 @@ arcpy.env.overwriteOutput = True
 
 # Set variables
 logInfo = "true"
-logFile = r"C:\Development\Projects\ArcGIS Admin Toolkit\Logs\CacheMapService.log"
+logFile = os.path.join(os.path.dirname(__file__), r"Logs\CacheMapService.log")
 sendEmail = "false"
 emailTo = ""
 emailUser = ""

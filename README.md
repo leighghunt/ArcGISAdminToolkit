@@ -8,7 +8,7 @@ Will compress geodatabase, update statistics and rebuild tables indexes.
 #### Map Service Download
 Downloads the data used in a map service layer by querying the json and converting to a feature class.
 
-#### Cache Map Service
+#### Cache Map Service (IN DEVELOPMENT)
 Caches a map service at specified scales and reports on progress. Ability to also pause/resume caching at a specified time.
 
 #### Backup and Restore ArcGIS Server Site
@@ -17,6 +17,8 @@ Backs up or restores an ArcGIS Server site.
 * Creates a site if no site has been created, otherwise will overwrite previous site. 
 * Restores the license.
 * Need to include data in map service OR make sure referenced data is in same place.
+* The arcgisserver directories need to be in the same file path on the restore server as the backup server.
+* Does not include map caches
 * Need to have ArcGIS for Server and ArcGIS web adaptor for IIS installed (if wanting to restore web adaptor).
 
 
@@ -31,9 +33,15 @@ Backs up or restores an ArcGIS Server site.
 
 ## Requirements
 
-* ArcGIS for Desktop 10.1+ - Geodatabase - Update & Compress, Map Service Download, Cache Map Service
-* ArcGIS for Server 10.1+ - Geodatabase - Update & Compress, Cache Map Service
-* ArcGIS for Server 10.2+ - Backup and Restore ArcGIS Server Site
+* ArcGIS for Desktop 10.1+ 
+	* Geodatabase - Update & Compress
+	* Map Service Download
+	* Cache Map Service
+* ArcGIS for Server 10.1+
+	* Geodatabase - Update & Compress
+	* Cache Map Service
+* ArcGIS for Server 10.2+
+	* Backup and Restore ArcGIS Server Site
 
 
 ## Installation Instructions
@@ -66,7 +74,7 @@ Anyone and everyone is welcome to contribute.
 
 
 ## Licensing
-Copyright 2014 - haun Weston
+Copyright 2014 - Shaun Weston
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
