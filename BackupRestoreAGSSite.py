@@ -1,9 +1,13 @@
 #-------------------------------------------------------------
 # Name:       Backup and/or Restore ArcGIS Server site
-# Purpose:    Backs up and/or restores and ArcGIS server site.     
+# Purpose:    Backs up or restores an ArcGIS Server site. 
+#             - Restores an ArcGIS server site from a backup file. 
+#             - Restores the license
+#             - Need to include data in map service OR make sure referenced data is in same place.
+#             - Need to have ArcGIS for Server and ArcGIS web adaptor for IIS installed (if wanting to restore web adaptor).    
 # Author:     Shaun Weston (shaun_weston@eagle.co.nz)
 # Date Created:    27/01/2014
-# Last Updated:    28/01/2014
+# Last Updated:    04/02/2014
 # Copyright:   (c) Eagle Technology
 # ArcGIS Version:   10.2+
 # Python Version:   2.7
@@ -59,130 +63,34 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
 
         # Get token
         token = getToken(username, password, serverName, serverPort, protocol)
-
         # If site not created created   
         if token == -1:
             # Create new site
             arcpy.AddMessage("Creating site...")
             siteResult = createSite(username,password,serverName, serverPort, protocol)
-            # Get token
-            token = getToken(username, password, serverName, serverPort, protocol)            
         else:    
             arcpy.AddMessage("Site already created...")
             
         # If backing up site
         if (backupRestore == "Backup"):
-            if (len(str(backupFolder)) > 0):            
-                # Get backup url
-                backupURL = context + "exportSite"
-
-                # Setup parameters
-                backupFolder = backupFolder.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8')
-                params = urllib.urlencode({'token': token, 'f': 'json', 'location': backupFolder})
-
-                arcpy.AddMessage("Backing up the ArcGIS Server site running at " + serverName + "...")
-
-                try:
-                    # Post to server
-                    response, data = postToServer(serverName, serverPort, protocol, backupURL, params)
-                except:
-                    arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
-                    return -1
-
-                # If there is an error
-                if (response.status != 200):
-                    arcpy.AddError("Unable to back up the ArcGIS Server site running at " + serverName)
-                    arcpy.AddError(str(data))
-                    return -1
-                
-                if (not assertJsonSuccess(data)):
-                    arcpy.AddError("Unable to back up the ArcGIS Server site running at " + serverName)
-                    return -1                    
-                # On successful backup
-                else:
-                    dataObject = json.loads(data)
-                    arcpy.AddMessage("ArcGIS Server site has been successfully backed up and is available at this location: " + dataObject['location'] + "...")
-            else:
-                arcpy.AddError("Please define a folder for the backup to be exported to.");
-            
+            # Get token
+            token = getToken(username, password, serverName, serverPort, protocol)
+            # Backup the site
+            backupSite(serverName, serverPort, protocol, context, token, backupFolder)           
         # If restoring site
         if (backupRestore == "Restore"):
-            if (len(str(backupFile)) > 0):
-                # Get restore url
-                restoreURL = context + "importSite"
+            # Get token
+            token = getToken(username, password, serverName, serverPort, protocol)            
+            # Restore the site
+            restoreSite(serverName, serverPort, protocol, context, token, backupFile, restoreReport)   
 
-                arcpy.AddMessage("Beginning to restore the ArcGIS Server site running on " + serverName + " using the site backup available at: " + backupFile + "...")
-                arcpy.AddMessage("This operation can take some time. You will not receive any status messages and will not be able to access the site until the operation is complete...")
-
-                # Setup parameters
-                backupFile = backupFile.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8')
-                params = urllib.urlencode({'token': token, 'f': 'json', 'location': backupFile})
-
-                try:
-                    # Post to server
-                    response, data = postToServer(serverName, serverPort, protocol, restoreURL, params)
-                except:
-                    arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
-                    return -1   
-
-                # If there is an error 
-                if (response.status != 200):
-                    arcpy.AddError("The restore of the ArcGIS Server site " + serverName + " failed.")
-                    arcpy.AddError(str(data))
-                    return -1
-
-                if (not assertJsonSuccess(data)):
-                    arcpy.AddError("The restore of the ArcGIS Server site " + serverName + " failed.")
-                    arcpy.AddError(str(data))
-                    return -1                    
-                # On successful restore
-                else:
-                    # Convert the http response to JSON object
-                    dataObject = json.loads(data)
-                    results = dataObject['result']
-                        
-                    msgList = []
-                    
-                    restoreOpTime = ''        
-                    for result in results:
-                        messages = result['messages']
-                        for message in messages:
-                            if ('Import operation completed in ' in message['message'] and message['level'] == 'INFO' and result['source'] == 'SITE') :
-                                restoreOpTime = message['message']
-                                arcpy.AddMessage("ArcGIS Server site has been successfully restored. " + message['message'])
-                            else:
-                                msgList.append(message['message'])  
-                    
-                    # User wants the report generated from the restore utility to be saved to a file in addition to writing the messages to the console        
-                    if (len(restoreReport) > 0):
-                        try:
-                            reportFile = codecs.open(os.path.join(restoreReport), 'w', 'utf-8-sig')
-                            reportFile.write("Site has been successfully restored. " + restoreOpTime)
-                            reportFile.write("\n\n")
-                            if (len(msgList) > 0):
-                                reportFile.write("Below are the messages returned from the restore operation. You should review these messages and update your site configuration as needed:")
-                                reportFile.write("\n")
-                                reportFile.write("-------------------------------------------------------------------------------------------------------------------------------------")
-                                reportFile.write("\n")
-                                count = 1
-                                for msg in msgList:
-                                    reportFile.write(str(count)+ "." + msg)
-                                    reportFile.write("\n\n")
-                                    count = count + 1
-                            reportFile.close()
-                            arcpy.AddMessage("A file with the report from the restore utility has been saved at: " + restoreReport) 
-                        except:
-                            arcpy.AddError("Unable to save the report file at: " + restoreReport + " Please verify this location is available.")
-                            return
-
-                    # If restoring a web adaptor
-                    if (restoreWebAdaptor == "true"):
-                        # Register the web adaptor
-                        arcpy.AddMessage("Registering the web adaptor...")
-                        registerWebAdaptor(serverName, serverPort, protocol, token)
-            else:
-                arcpy.AddError("Please define a ArcGIS Server site backup file.");
-            
+            # If restoring a web adaptor
+            if (restoreWebAdaptor == "true"):
+                # Get token
+                token = getToken(username, password, serverName, serverPort, protocol)
+                # Register the web adaptor
+                arcpy.AddMessage("Registering the web adaptor...")                
+                registerWebAdaptor(serverName, serverPort, protocol, token)            
         # --------------------------------------- End of code --------------------------------------- #  
             
         # If called from gp tool return the arcpy parameter   
@@ -215,6 +123,117 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
             loggingFunction(logFile,"error",e.args[0])
 # End of main function
 
+
+# Start of back up site function
+def backupSite(serverName, serverPort, protocol, context, token, backupFolder):
+    if (len(str(backupFolder)) > 0):            
+        # Get backup url
+        backupURL = context + "exportSite"
+
+        # Setup parameters
+        backupFolder = backupFolder.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8')
+        params = urllib.urlencode({'token': token, 'f': 'json', 'location': backupFolder})
+
+        arcpy.AddMessage("Backing up the ArcGIS Server site running at " + serverName + "...")
+
+        try:
+            # Post to server
+            response, data = postToServer(serverName, serverPort, protocol, backupURL, params)
+        except:
+            arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+            return -1
+
+        # If there is an error
+        if (response.status != 200):
+            arcpy.AddError("Unable to back up the ArcGIS Server site running at " + serverName)
+            arcpy.AddError(str(data))
+            return -1
+        
+        if (not assertJsonSuccess(data)):
+            arcpy.AddError("Unable to back up the ArcGIS Server site running at " + serverName)
+            return -1                    
+        # On successful backup
+        else:
+            dataObject = json.loads(data)
+            arcpy.AddMessage("ArcGIS Server site has been successfully backed up and is available at this location: " + dataObject['location'] + "...")
+    else:
+        arcpy.AddError("Please define a folder for the backup to be exported to.");
+# End of back up site function
+
+    
+# Start of restore site function
+def restoreSite(serverName, serverPort, protocol, context, token, backupFile, restoreReport):
+    if (len(str(backupFile)) > 0):
+        # Get restore url
+        restoreURL = context + "importSite"
+
+        arcpy.AddMessage("Beginning to restore the ArcGIS Server site running on " + serverName + " using the site backup available at: " + backupFile + "...")
+        arcpy.AddMessage("This operation can take some time. You will not receive any status messages and will not be able to access the site until the operation is complete...")
+
+        # Setup parameters
+        backupFile = backupFile.decode(sys.stdin.encoding or sys.getdefaultencoding()).encode('utf-8')
+        params = urllib.urlencode({'token': token, 'f': 'json', 'location': backupFile})
+
+        try:
+            # Post to server
+            response, data = postToServer(serverName, serverPort, protocol, restoreURL, params)
+        except:
+            arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+            return -1   
+
+        # If there is an error 
+        if (response.status != 200):
+            arcpy.AddError("The restore of the ArcGIS Server site " + serverName + " failed.")
+            arcpy.AddError(str(data))
+            return -1
+
+        if (not assertJsonSuccess(data)):
+            arcpy.AddError("The restore of the ArcGIS Server site " + serverName + " failed.")
+            arcpy.AddError(str(data))
+            return -1                    
+        # On successful restore
+        else:
+            # Convert the http response to JSON object
+            dataObject = json.loads(data)
+            results = dataObject['result']
+                
+            msgList = []
+            
+            restoreOpTime = ''        
+            for result in results:
+                messages = result['messages']
+                for message in messages:
+                    if ('Import operation completed in ' in message['message'] and message['level'] == 'INFO' and result['source'] == 'SITE') :
+                        restoreOpTime = message['message']
+                        arcpy.AddMessage("ArcGIS Server site has been successfully restored. " + message['message'])
+                    else:
+                        msgList.append(message['message'])  
+            
+            # User wants the report generated from the restore utility to be saved to a file in addition to writing the messages to the console        
+            if (len(restoreReport) > 0):
+                try:
+                    reportFile = codecs.open(os.path.join(restoreReport), 'w', 'utf-8-sig')
+                    reportFile.write("Site has been successfully restored. " + restoreOpTime)
+                    reportFile.write("\n\n")
+                    if (len(msgList) > 0):
+                        reportFile.write("Below are the messages returned from the restore operation. You should review these messages and update your site configuration as needed:")
+                        reportFile.write("\n")
+                        reportFile.write("-------------------------------------------------------------------------------------------------------------------------------------")
+                        reportFile.write("\n")
+                        count = 1
+                        for msg in msgList:
+                            reportFile.write(str(count)+ "." + msg)
+                            reportFile.write("\n\n")
+                            count = count + 1
+                    reportFile.close()
+                    arcpy.AddMessage("A file with the report from the restore utility has been saved at: " + restoreReport) 
+                except:
+                    arcpy.AddError("Unable to save the report file at: " + restoreReport + " Please verify this location is available.")
+                    return
+    else:
+        arcpy.AddError("Please define a ArcGIS Server site backup file.");
+# End of restore site function
+    
 
 # Start of create site function
 def createSite(username, password, serverName, serverPort, protocol):  
