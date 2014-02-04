@@ -13,8 +13,9 @@ Caches a map service at specified scales and reports on progress. Ability to als
 
 #### Backup and Restore ArcGIS Server Site
 Backs up or restores an ArcGIS Server site. 
-* Restores an ArcGIS server site from a backup file. 
-* Restores the license
+* Restores an ArcGIS server site from a backup file.
+* Creates a site if no site has been created, otherwise will overwrite previous site. 
+* Restores the license.
 * Need to include data in map service OR make sure referenced data is in same place.
 * Need to have ArcGIS for Server and ArcGIS web adaptor for IIS installed (if wanting to restore web adaptor).
 
@@ -39,7 +40,7 @@ Backs up or restores an ArcGIS Server site.
 
 * Setup a script to run as a scheduled task
 	* Fork and then clone the repository or download the .zip file. 
-	* Edit the batch file to be automated and change the parameters to suit your environment.
+	* Edit the [batch file](/Examples) to be automated and change the parameters to suit your environment.
 	* Open Windows Task Scheduler and setup a new basic task.
 	* Set the task to execute the batch file at a specified time.
 

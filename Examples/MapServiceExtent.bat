@@ -1,0 +1,2 @@
+REM --- Map service request extents ---
+"C:\PYTHON27\ArcGIS10.2\python.exe" "C:\Data\Development\Esri Projects\ArcGIS Admin Toolkit\ArcGISServerAdmin.py" LOCALHOST 6080 administrator Spl1ceGroup logFC Cadastral/Parcels.MapServer C:\Data\Admin\AdminData.gdb ExtentsFC ExtentsRaster

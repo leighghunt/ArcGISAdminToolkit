@@ -1,7 +1,8 @@
 #-------------------------------------------------------------
 # Name:       Backup and/or Restore ArcGIS Server site
 # Purpose:    Backs up or restores an ArcGIS Server site. 
-#             - Restores an ArcGIS server site from a backup file. 
+#             - Restores an ArcGIS server site from a backup file.
+#             - Creates a site if no site has been created, otherwise will overwrite previous site. 
 #             - Restores the license
 #             - Need to include data in map service OR make sure referenced data is in same place.
 #             - Need to have ArcGIS for Server and ArcGIS web adaptor for IIS installed (if wanting to restore web adaptor).    
