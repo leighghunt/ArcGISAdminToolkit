@@ -8,7 +8,7 @@ Will compress geodatabase, update statistics and rebuild tables indexes.
 #### Map Service Download
 Downloads the data used in a map service layer by querying the json and converting to a feature class.
 
-#### Cache Map Service (IN DEVELOPMENT)
+#### Cache Map Service
 Caches a map service at specified scales and reports on progress. Ability to also pause/resume caching at a specified time.
 
 #### Backup and Restore ArcGIS Server Site

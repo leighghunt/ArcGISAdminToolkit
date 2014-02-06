@@ -40,17 +40,29 @@ def mainFunction(mapService,updateMode,tileScheme): # Get parameters from ArcGIS
         
         # If new cache
         if updateMode == "New":
-            arcpy.CreateMapServerCache_server(mapService, tileScheme, "PREDEFINED", "", "", "", "", "", "0 0", "", "", "0", "COMPACT")
-
+            # If tile scheme file provided
+            if (len(str(tileScheme)) > 0):        
+                arcpy.AddMessage("Creating new cache...")
+                # Create cache folders
+                arcpy.CreateMapServerCache_server(mapService, tileScheme, "PREDEFINED", "", "", "", "", "", "0 0", "", "", "0", "COMPACT")
+                # Start caching process
+                arcpy.ManageMapServerCacheTiles_server(mapService, "", "RECREATE_ALL_TILES", "", "", "", "WAIT")
+            else:
+                arcpy.AddError("Please provide a tiling scheme file for the cache...")
+                
         # If existing cache to create all tiles
         if updateMode == "Existing - Recreate All Tiles":
             # Rebuild the map cache
+            arcpy.AddMessage("Rebuilding cache...")
+            # Start caching process            
             arcpy.ManageMapServerCacheTiles_server(mapService, "", "RECREATE_ALL_TILES", "", "", "", "WAIT")
             
         # If existing cache to create empty tiles
         if updateMode == "Existing - Recreate Empty Tiles":
             # Rebuild the map cache
-            arcpy.ManageMapServerCacheTiles_server(mapService, "", "RECREATE_ALL_TILES", "", "", "", "WAIT")
+            arcpy.AddMessage("Rebuilding cache...")
+            # Start caching process            
+            arcpy.ManageMapServerCacheTiles_server(mapService, "", "RECREATE_EMPTY_TILES", "", "", "", "WAIT")
       
         # --------------------------------------- End of code --------------------------------------- #  
             
@@ -71,14 +83,14 @@ def mainFunction(mapService,updateMode,tileScheme): # Get parameters from ArcGIS
     # If arcpy error
     except arcpy.ExecuteError:
         # Show the message
-        arcpy.AddMessage(arcpy.GetMessages(2))        
+        arcpy.AddError(arcpy.GetMessages(2))        
         # Log error
         if logInfo == "true":  
             loggingFunction(logFile,"error",arcpy.GetMessages(2))
     # If python error
     except Exception as e:
         # Show the message
-        arcpy.AddMessage(e.args[0])          
+        arcpy.AddError(e.args[0])          
         # Log error
         if logInfo == "true":         
             loggingFunction(logFile,"error",e.args[0])
