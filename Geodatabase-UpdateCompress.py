@@ -85,14 +85,14 @@ def mainFunction(geodatabase): # Get parameters from ArcGIS Desktop tool by sepe
     # If arcpy error
     except arcpy.ExecuteError:
         # Show the message
-        arcpy.AddMessage(arcpy.GetMessages(2))        
+        arcpy.AddError(arcpy.GetMessages(2))        
         # Log error
         if logInfo == "true":  
             loggingFunction(logFile,"error",arcpy.GetMessages(2))
     # If python error
     except Exception as e:
         # Show the message
-        arcpy.AddMessage(e.args[0])          
+        arcpy.AddError(e.args[0])          
         # Log error
         if logInfo == "true":         
             loggingFunction(logFile,"error",e.args[0])

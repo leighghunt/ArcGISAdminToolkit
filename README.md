@@ -11,6 +11,9 @@ Downloads the data used in a map service layer by querying the json and converti
 #### Cache Map Service
 Caches a map service at specified scales and reports on progress. Ability to also pause/resume caching at a specified time.
 
+#### ArcGIS Server Availability (IN DEVELOPMENT)
+Checks ArcGIS server site and services and reports if site is down and/or particular service is down. This tool should be setup as an automated task on the server.
+
 #### Backup and Restore ArcGIS Server Site
 Backs up or restores an ArcGIS Server site. 
 * Restores an ArcGIS server site from a backup file.
@@ -28,6 +31,7 @@ Backs up or restores an ArcGIS Server site.
 * Download data from a map service.
 * Maintain geodatabase performance.
 * Setup map caching as a scheduled task.
+* Monitor ArcGIS Server site.
 * Backup and restore site configurations.
 
 
@@ -37,9 +41,11 @@ Backs up or restores an ArcGIS Server site.
 	* Geodatabase - Update & Compress
 	* Map Service Download
 	* Cache Map Service
+	* ArcGIS Server Availability
 * ArcGIS for Server 10.1+
 	* Geodatabase - Update & Compress
 	* Cache Map Service
+	* ArcGIS Server Availability
 * ArcGIS for Server 10.2+
 	* Backup and Restore ArcGIS Server Site
 
