@@ -96,6 +96,7 @@ def mainFunction(agsServerSite,username,password,service): # Get parameters from
                 # If logging
                 if (logging == "true") or (sendErrorEmail == "true"):
                     loggingFunction(logFile,"error",str(stoppedServices) + " services are stopped")
+                    sys.exit()
             else:
                 arcpy.AddMessage("All services are running...")
                 # If logging
@@ -152,6 +153,7 @@ def getServices(serverName, serverPort, protocol, token):
         # Log error
         if (logging == "true") or (sendErrorEmail == "true"):       
             loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+            sys.exit()
         return -1
 
     # If there is an error
@@ -160,13 +162,15 @@ def getServices(serverName, serverPort, protocol, token):
         arcpy.AddError(str(data))
         # Log error
         if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Error getting services.")        
+            loggingFunction(logFile,"error","Error getting services.")
+            sys.exit()
         return -1
     if (not assertJsonSuccess(data)):
         arcpy.AddError("Error getting services. Please check if the server is running and ensure that the username/password provided are correct.")
         # Log error
         if (logging == "true") or (sendErrorEmail == "true"):       
             loggingFunction(logFile,"error","Error getting services. Please check if the server is running and ensure that the username/password provided are correct.")  
+            sys.exit()
         return -1
     # On successful query
     else: 
@@ -191,6 +195,7 @@ def getServices(serverName, serverPort, protocol, token):
                 # Log error
                 if (logging == "true") or (sendErrorEmail == "true"):       
                     loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+                    sys.exit()
                 return -1
     
             # If there is an error
@@ -199,13 +204,15 @@ def getServices(serverName, serverPort, protocol, token):
                 arcpy.AddError(str(data))
                 # Log error
                 if (logging == "true") or (sendErrorEmail == "true"):       
-                    loggingFunction(logFile,"error","Error getting services.")                
+                    loggingFunction(logFile,"error","Error getting services.")
+                    sys.exit()
                 return -1
             if (not assertJsonSuccess(data)):
                 arcpy.AddError("Error getting services. Please check if the server is running and ensure that the username/password provided are correct.")
                 # Log error
                 if (logging == "true") or (sendErrorEmail == "true"):       
                     loggingFunction(logFile,"error","Error getting services. Please check if the server is running and ensure that the username/password provided are correct.")
+                    sys.exit()
                 return -1
             # On successful query
             else: 
@@ -232,7 +239,8 @@ def getServiceStatus(serverName, serverPort, protocol, service, token):
         arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
         # Log error
         if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")    
+            loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+            sys.exit()
         return -1
 
     # If there is an error
@@ -240,14 +248,16 @@ def getServiceStatus(serverName, serverPort, protocol, service, token):
         arcpy.AddError("Error getting service status.")
         # Log error
         if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Error getting service status.")        
+            loggingFunction(logFile,"error","Error getting service status.")
+            sys.exit()
         arcpy.AddError(str(data))
         return -1
     if (not assertJsonSuccess(data)):
         arcpy.AddError("Error getting service status. Please check if the server is running and ensure that the username/password provided are correct.")
         # Log error
         if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Error getting service status. Please check if the server is running and ensure that the username/password provided are correct.")   
+            loggingFunction(logFile,"error","Error getting service status. Please check if the server is running and ensure that the username/password provided are correct.")
+            sys.exit()
         return -1
     # On successful query
     else: 
@@ -271,6 +281,7 @@ def getToken(username, password, serverName, serverPort, protocol):
         # Log error
         if (logging == "true") or (sendErrorEmail == "true"):       
             loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+            sys.exit()
         return -1    
     # If there is an error getting the token
     if (response.status != 200):
@@ -278,13 +289,15 @@ def getToken(username, password, serverName, serverPort, protocol):
         arcpy.AddError(str(data))
         # Log error
         if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Error while generating the token.")        
+            loggingFunction(logFile,"error","Error while generating the token.")
+            sys.exit()
         return -1
     if (not assertJsonSuccess(data)):
         arcpy.AddError("Error while generating the token. Please check if the server is running and ensure that the username/password provided are correct.")
         # Log error
         if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Error while generating the token. Please check if the server is running and ensure that the username/password provided are correct.") 
+            loggingFunction(logFile,"error","Error while generating the token. Please check if the server is running and ensure that the username/password provided are correct.")
+            sys.exit()
         return -1
     # Token returned
     else:
@@ -296,7 +309,8 @@ def getToken(username, password, serverName, serverPort, protocol):
             arcpy.AddError("Error retrieving token.")
             # Log error
             if (logging == "true") or (sendErrorEmail == "true"):       
-                loggingFunction(logFile,"error","Error retrieving token.")             
+                loggingFunction(logFile,"error","Error retrieving token.")
+                sys.exit()
             return -1        
         else:
             return dataObject['token']
@@ -374,7 +388,8 @@ def splitSiteURL(siteURL):
         arcpy.AddError("The ArcGIS Server site URL should be in the format http(s)://<host>:<port>/arcgis")
         # Log error
         if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","The ArcGIS Server site URL should be in the format http(s)://<host>:<port>/arcgis") 
+            loggingFunction(logFile,"error","The ArcGIS Server site URL should be in the format http(s)://<host>:<port>/arcgis")
+            sys.exit()
         return None, None, None, None
 # End of split URL function
 
@@ -390,6 +405,7 @@ def assertJsonSuccess(data):
                 # Log error
                 if (logging == "true") or (sendErrorEmail == "true"):       
                     loggingFunction(logFile,"error",errMsg)
+            sys.exit()
         return False
     else:
         return True
