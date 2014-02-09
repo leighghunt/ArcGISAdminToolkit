@@ -10,7 +10,7 @@
 #             - Need to have ArcGIS for Server and ArcGIS web adaptor for IIS installed (if wanting to restore web adaptor).    
 # Author:     Shaun Weston (shaun_weston@eagle.co.nz)
 # Date Created:    27/01/2014
-# Last Updated:    04/02/2014
+# Last Updated:    09/02/2014
 # Copyright:   (c) Eagle Technology
 # ArcGIS Version:   10.2+
 # Python Version:   2.7
@@ -29,9 +29,9 @@ import arcpy
 arcpy.env.overwriteOutput = True
 
 # Set variables
-logInfo = "true"
+logging = "true"
 logFile = os.path.join(os.path.dirname(__file__), r"Logs\BackupRestoreAGSSite.log")
-sendEmail = "false"
+sendErrorEmail = "false"
 emailTo = ""
 emailUser = ""
 emailPassword = ""
@@ -43,7 +43,7 @@ output = None
 def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,backupFile,restoreWebAdaptor,restoreReport): # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)  
     try:
         # Log start
-        if logInfo == "true":
+        if (logging == "true") or (sendErrorEmail == "true"):
             loggingFunction(logFile,"start","")
 
         # --------------------------------------- Start of code --------------------------------------- #        
@@ -106,7 +106,7 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
             if output:
                 return output      
         # Log end
-        if logInfo == "true":
+        if (logging == "true") or (sendErrorEmail == "true"):
             loggingFunction(logFile,"end","")        
         pass
     # If arcpy error
@@ -114,14 +114,14 @@ def mainFunction(agsServerSite,username,password,backupRestore,backupFolder,back
         # Show the message
         arcpy.AddError(arcpy.GetMessages(2))        
         # Log error
-        if logInfo == "true":  
+        if (logging == "true") or (sendErrorEmail == "true"):
             loggingFunction(logFile,"error",arcpy.GetMessages(2))
     # If python error
     except Exception as e:
         # Show the message
         arcpy.AddError(e.args[0])          
         # Log error
-        if logInfo == "true":         
+        if (logging == "true") or (sendErrorEmail == "true"):     
             loggingFunction(logFile,"error",e.args[0])
 # End of main function
 
@@ -143,16 +143,25 @@ def backupSite(serverName, serverPort, protocol, context, token, backupFolder):
             response, data = postToServer(serverName, serverPort, protocol, backupURL, params)
         except:
             arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+            # Log error
+            if (logging == "true") or (sendErrorEmail == "true"):       
+                loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")            
             return -1
 
         # If there is an error
         if (response.status != 200):
             arcpy.AddError("Unable to back up the ArcGIS Server site running at " + serverName)
             arcpy.AddError(str(data))
+            # Log error
+            if (logging == "true") or (sendErrorEmail == "true"):       
+                loggingFunction(logFile,"error","Unable to back up the ArcGIS Server site running at " + serverName)              
             return -1
         
         if (not assertJsonSuccess(data)):
             arcpy.AddError("Unable to back up the ArcGIS Server site running at " + serverName)
+            # Log error
+            if (logging == "true") or (sendErrorEmail == "true"):       
+                loggingFunction(logFile,"error","Unable to back up the ArcGIS Server site running at " + serverName)            
             return -1                    
         # On successful backup
         else:
@@ -160,6 +169,9 @@ def backupSite(serverName, serverPort, protocol, context, token, backupFolder):
             arcpy.AddMessage("ArcGIS Server site has been successfully backed up and is available at this location: " + dataObject['location'] + "...")
     else:
         arcpy.AddError("Please define a folder for the backup to be exported to.");
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Please define a folder for the backup to be exported to.")        
 # End of back up site function
 
     
@@ -181,17 +193,26 @@ def restoreSite(serverName, serverPort, protocol, context, token, backupFile, re
             response, data = postToServer(serverName, serverPort, protocol, restoreURL, params)
         except:
             arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+            # Log error
+            if (logging == "true") or (sendErrorEmail == "true"):       
+                loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")            
             return -1   
 
         # If there is an error 
         if (response.status != 200):
             arcpy.AddError("The restore of the ArcGIS Server site " + serverName + " failed.")
             arcpy.AddError(str(data))
+            # Log error
+            if (logging == "true") or (sendErrorEmail == "true"):       
+                loggingFunction(logFile,"error","The restore of the ArcGIS Server site " + serverName + " failed.")              
             return -1
 
         if (not assertJsonSuccess(data)):
             arcpy.AddError("The restore of the ArcGIS Server site " + serverName + " failed.")
             arcpy.AddError(str(data))
+            # Log error
+            if (logging == "true") or (sendErrorEmail == "true"):       
+                loggingFunction(logFile,"error","The restore of the ArcGIS Server site " + serverName + " failed.")               
             return -1                    
         # On successful restore
         else:
@@ -238,9 +259,15 @@ def restoreSite(serverName, serverPort, protocol, context, token, backupFile, re
                     arcpy.AddMessage("A file with the report from the restore utility has been saved at: " + restoreReport) 
                 except:
                     arcpy.AddError("Unable to save the report file at: " + restoreReport + " Please verify this location is available.")
+                    # Log error
+                    if (logging == "true") or (sendErrorEmail == "true"):       
+                        loggingFunction(logFile,"error","Unable to save the report file at: " + restoreReport + " Please verify this location is available.")                       
                     return
     else:
         arcpy.AddError("Please define a ArcGIS Server site backup file.");
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Please define a ArcGIS Server site backup file.")        
 # End of restore site function
     
 
@@ -257,12 +284,18 @@ def createSite(username, password, serverName, serverPort, protocol):
         response, data = postToServer(serverName, serverPort, protocol, url, params)
     except:
         arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")                    
         return -1
 
     # If there is an error creating the site
     if (response.status != 200):
         arcpy.AddError("Error creating site.")
         arcpy.AddError(str(data))
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Error creating site.")          
         return -1
     if (not assertJsonSuccess(data)):
         return -1
@@ -287,15 +320,24 @@ def registerWebAdaptor(serverName, serverPort, protocol, token):
         response, data = postToServer(serverName, serverPort, protocol, url, params)
     except:
         arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")            
         return -1
 
     # If there is an error registering web adaptor
     if (response.status != 200):
         arcpy.AddError("Error registering web adaptor.")
         arcpy.AddError(str(data))
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Error registering web adaptor.")          
         return -1
     if (not assertJsonSuccess(data)):
         arcpy.AddError("Error registering web adaptor. Please check if the server is running and ensure that the username/password provided are correct.")
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Error registering web adaptor. Please check if the server is running and ensure that the username/password provided are correct.")   
         return -1
     # On successful registration
     else: 
@@ -317,14 +359,23 @@ def getToken(username, password, serverName, serverPort, protocol):
         response, data = postToServer(serverName, serverPort, protocol, url, params)
     except:
         arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
         return -1    
     # If there is an error getting the token
     if (response.status != 200):
         arcpy.AddError("Error while generating the token.")
         arcpy.AddError(str(data))
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Error while generating the token.")        
         return -1
     if (not assertJsonSuccess(data)):
         arcpy.AddError("Error while generating the token. Please check if the server is running and ensure that the username/password provided are correct.")
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Error while generating the token. Please check if the server is running and ensure that the username/password provided are correct.") 
         return -1
     # Token returned
     else:
@@ -333,7 +384,11 @@ def getToken(username, password, serverName, serverPort, protocol):
 
         # Return the token if available
         if "error" in dataObject:
-            return -1
+            arcpy.AddError("Error retrieving token.")
+            # Log error
+            if (logging == "true") or (sendErrorEmail == "true"):       
+                loggingFunction(logFile,"error","Error retrieving token.")             
+            return -1        
         else:
             return dataObject['token']
 # End of get token function
@@ -420,6 +475,9 @@ def assertJsonSuccess(data):
             errMsgs = obj['messages']
             for errMsg in errMsgs:
                 arcpy.AddError(errMsg)
+                # Log error
+                if (logging == "true") or (sendErrorEmail == "true"):       
+                    loggingFunction(logFile,"error",errMsg)                
         return False
     else:
         return True
@@ -431,40 +489,42 @@ def loggingFunction(logFile,result,info):
     #Get the time/date
     setDateTime = datetime.datetime.now()
     currentDateTime = setDateTime.strftime("%d/%m/%Y - %H:%M:%S")
-    
     # Open log file to log message and time/date
-    if result == "start":
+    if (result == "start") and (logging == "true"):
         with open(logFile, "a") as f:
             f.write("---" + "\n" + "Process started at " + currentDateTime)
-    if result == "end":
+    if (result == "end") and (logging == "true"):
         with open(logFile, "a") as f:
             f.write("\n" + "Process ended at " + currentDateTime + "\n")
             f.write("---" + "\n")
-    if result == "warning":
+    if (result == "info") and (logging == "true"):
         with open(logFile, "a") as f:
-            f.write("\n" + "Warning: " + info)               
-    if result == "error":
+            f.write("\n" + "Info: " + str(info))              
+    if (result == "warning") and (logging == "true"):
+        with open(logFile, "a") as f:
+            f.write("\n" + "Warning: " + str(info))               
+    if (result == "error") and (logging == "true"):
         with open(logFile, "a") as f:
             f.write("\n" + "Process ended at " + currentDateTime + "\n")
-            f.write("Error: " + info + "\n")        
+            f.write("Error: " + str(info) + "\n")        
             f.write("---" + "\n")
+    if (result == "error") and (sendErrorEmail == "true"):            
         # Send an email
-        if sendEmail == "true":
-            arcpy.AddMessage("Sending email...")
-            # Server and port information
-            smtpserver = smtplib.SMTP("smtp.gmail.com",587) 
-            smtpserver.ehlo()
-            smtpserver.starttls() 
-            smtpserver.ehlo
-            # Login with sender email address and password
-            smtpserver.login(emailUser, emailPassword)
-            # Email content
-            header = 'To:' + emailTo + '\n' + 'From: ' + emailUser + '\n' + 'Subject:' + emailSubject + '\n'
-            message = header + '\n' + emailMessage + '\n' + '\n' + info
-            # Send the email and close the connection
-            smtpserver.sendmail(emailUser, emailTo, message)
-            smtpserver.close()                
-# End of logging function    
+        arcpy.AddMessage("Sending email...")
+        # Server and port information
+        smtpserver = smtplib.SMTP("smtp.gmail.com",587) 
+        smtpserver.ehlo()
+        smtpserver.starttls() 
+        smtpserver.ehlo
+        # Login with sender email address and password
+        smtpserver.login(emailUser, emailPassword)
+        # Email content
+        header = 'To:' + emailTo + '\n' + 'From: ' + emailUser + '\n' + 'Subject:' + emailSubject + '\n'
+        message = header + '\n' + emailMessage + '\n' + '\n' + info
+        # Send the email and close the connection
+        smtpserver.sendmail(emailUser, emailTo, message)
+        smtpserver.close()                
+# End of logging function   
 
 # This test allows the script to be used from the operating
 # system command prompt (stand-alone), in a Python IDE, 
