@@ -14,6 +14,9 @@ Caches a map service at specified scales and reports on progress. Ability to als
 #### ArcGIS Server Availability
 Checks ArcGIS server site and services and reports if site is down and/or particular service is down. This tool should be setup as an automated task on the server.
 
+#### WFS Layer Download
+Downloads the data used in a WFS layer.  
+
 #### Backup and Restore ArcGIS Server Site
 Backs up or restores an ArcGIS Server site. 
 * Restores an ArcGIS server site from a backup file.
@@ -28,7 +31,7 @@ Backs up or restores an ArcGIS Server site.
 ## Features
 
 * Automate the administration process.
-* Download data from a map service.
+* Download data from a map service or WFS layer.
 * Maintain geodatabase performance.
 * Setup map caching as a scheduled task.
 * Monitor ArcGIS Server site.
@@ -42,6 +45,7 @@ Backs up or restores an ArcGIS Server site.
 	* Map Service Download
 	* Cache Map Service
 	* ArcGIS Server Availability
+	* WFS Layer Download
 * ArcGIS for Server 10.1+
 	* Geodatabase - Update & Compress
 	* Cache Map Service
