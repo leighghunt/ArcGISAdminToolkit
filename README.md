@@ -3,19 +3,13 @@
 The ArcGIS admin toolkit contains a number of tools and scripts to administer ArcGIS Server and Desktop. The following tools are available:
 
 #### Geodatabase - Update & Compress
-Will compress geodatabase, update statistics and rebuild tables indexes.
-
-#### Map Service Download
-Downloads the data used in a map service layer by querying the json and converting to a feature class.
+Will compress geodatabase, update statistics and rebuild tables indexes. 
 
 #### Cache Map Service
 Caches a map service at specified scales and reports on progress. Ability to also pause/resume caching at a specified time.
 
 #### ArcGIS Server Availability
 Checks ArcGIS server site and services and reports if site is down and/or particular service is down. This tool should be setup as an automated task on the server.
-
-#### WFS Layer Download
-Downloads the data used in a WFS layer.  
 
 #### Backup and Restore ArcGIS Server Site
 Backs up or restores an ArcGIS Server site. 
@@ -31,7 +25,6 @@ Backs up or restores an ArcGIS Server site.
 ## Features
 
 * Automate the administration process.
-* Download data from a map service or WFS layer.
 * Maintain geodatabase performance.
 * Setup map caching as a scheduled task.
 * Monitor ArcGIS Server site.
@@ -42,14 +35,14 @@ Backs up or restores an ArcGIS Server site.
 
 * ArcGIS for Desktop 10.1+ 
 	* Geodatabase - Update & Compress
-	* Map Service Download
 	* Cache Map Service
 	* ArcGIS Server Availability
-	* WFS Layer Download
+
 * ArcGIS for Server 10.1+
 	* Geodatabase - Update & Compress
 	* Cache Map Service
 	* ArcGIS Server Availability
+
 * ArcGIS for Server 10.2+
 	* Backup and Restore ArcGIS Server Site
 
