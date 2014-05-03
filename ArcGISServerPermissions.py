@@ -1,10 +1,9 @@
 #-------------------------------------------------------------
-# Name:       ArcGIS Server Availability 
-# Purpose:    Checks ArcGIS server site and services and reports if site is down and/or particular
-#             service is down. This tool should be setup as an automated task on the server.       
+# Name:       ArcGIS Server Permissions 
+# Purpose:    Checks ArcGIS server service or folder for any permission changes.     
 # Author:     Shaun Weston (shaun_weston@eagle.co.nz)
-# Date Created:    07/02/2014
-# Last Updated:    09/02/2014
+# Date Created:    03/05/2014
+# Last Updated:    03/05/2014
 # Copyright:   (c) Eagle Technology
 # ArcGIS Version:   10.1/10.2
 # Python Version:   2.7
@@ -62,46 +61,7 @@ def mainFunction(agsServerSite,username,password,service): # Get parameters from
 
         # If token received
         if (token != -1):
-            # List to hold services and their status
-            servicesStatus = []
-            
-            # If a service is provided
-            if (len(str(service)) > 0): 
-                # Query the service status
-                realtimeStatus = getServiceStatus(serverName, serverPort, protocol, service, token)
-                serviceDetails = {'status': realtimeStatus, 'service': service}
-                servicesStatus.append(serviceDetails)
-            # Else
-            else:
-                # Get all services
-                services = getServices(serverName, serverPort, protocol, token)
-                # Query all services
-                # Iterate through services
-                for eachService in services:
-                    # Query the service status
-                    realtimeStatus = getServiceStatus(serverName, serverPort, protocol, eachService, token)
-                    serviceDetails = {'status': realtimeStatus, 'service': eachService}
-                    servicesStatus.append(serviceDetails)
-
-            stoppedServices = 0
-            # Iterate through services
-            for eachServicesStatus in servicesStatus:
-                # If status is stopped at to counter
-                if (eachServicesStatus['status'] == "STOPPED"):
-                    stoppedServices = stoppedServices + 1
-
-            # If any services are stopped
-            if (stoppedServices > 0):
-                arcpy.AddError(str(stoppedServices) + " services are stopped...")
-                # If logging
-                if (logging == "true") or (sendErrorEmail == "true"):
-                    loggingFunction(logFile,"error",str(stoppedServices) + " services are stopped")
-                    sys.exit()
-            else:
-                arcpy.AddMessage("All services are running...")
-                # If logging
-                if (logging == "true") or (sendErrorEmail == "true"):
-                    loggingFunction(logFile,"info","All services are running...")            
+         
         # --------------------------------------- End of code --------------------------------------- #  
             
         # If called from gp tool return the arcpy parameter   
@@ -135,136 +95,16 @@ def mainFunction(agsServerSite,username,password,service): # Get parameters from
 # End of main function
 
 
-# Start of get services function
-def getServices(serverName, serverPort, protocol, token):
-    params = urllib.urlencode({'token': token, 'f': 'json'})
-
-    # Services list
-    services = []
-    
-    # Construct URL to get services
-    url = "/arcgis/admin/services"
-
-    # Post to the server
-    try:
-        response, data = postToServer(serverName, serverPort, protocol, url, params)
-    except:
-        arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
-        # Log error
-        if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
-            sys.exit()
-        return -1
-
-    # If there is an error
-    if (response.status != 200):
-        arcpy.AddError("Error getting services.")
-        arcpy.AddError(str(data))
-        # Log error
-        if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Error getting services.")
-            sys.exit()
-        return -1
-    if (not assertJsonSuccess(data)):
-        arcpy.AddError("Error getting services. Please check if the server is running and ensure that the username/password provided are correct.")
-        # Log error
-        if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Error getting services. Please check if the server is running and ensure that the username/password provided are correct.")  
-            sys.exit()
-        return -1
-    # On successful query
-    else: 
-        dataObject = json.loads(data)
-        
-        # Iterate through services
-        for eachService in dataObject['services']:
-            # Add to list
-            services.append(eachService['serviceName'] + "." + eachService['type'])
-                    
-        # Iterate through folders
-        for folder in dataObject['folders']:
-
-            # Construct URL to get services for the folder
-            url = "/arcgis/admin/services/" + folder
-
-            # Post to the server
-            try:
-                response, data = postToServer(serverName, serverPort, protocol, url, params)
-            except:
-                arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
-                # Log error
-                if (logging == "true") or (sendErrorEmail == "true"):       
-                    loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
-                    sys.exit()
-                return -1
-    
-            # If there is an error
-            if (response.status != 200):
-                arcpy.AddError("Error getting services.")
-                arcpy.AddError(str(data))
-                # Log error
-                if (logging == "true") or (sendErrorEmail == "true"):       
-                    loggingFunction(logFile,"error","Error getting services.")
-                    sys.exit()
-                return -1
-            if (not assertJsonSuccess(data)):
-                arcpy.AddError("Error getting services. Please check if the server is running and ensure that the username/password provided are correct.")
-                # Log error
-                if (logging == "true") or (sendErrorEmail == "true"):       
-                    loggingFunction(logFile,"error","Error getting services. Please check if the server is running and ensure that the username/password provided are correct.")
-                    sys.exit()
-                return -1
-            # On successful query
-            else: 
-                dataObject = json.loads(data)
-                # Iterate through services
-                for eachService in dataObject['services']:                
-                    services.append(folder + "/" + eachService['serviceName']+ "." + eachService['type'])
-        # Return a list of services
-        return services                    
-# End of get services function
-
-
-# Start of get service status function
-def getServiceStatus(serverName, serverPort, protocol, service, token):
+# Start of check permissions function
+def checkPermissions(serverName, serverPort, protocol, token):
     params = urllib.urlencode({'token': token, 'f': 'json'})
 
     # Construct URL to get the service status
-    url = "/arcgis/admin/services/" + service + "/status"
+    url = "/arcgis/admin/services/" + service + "/permissions"
 
-    # Post to the server
-    try:
-        response, data = postToServer(serverName, serverPort, protocol, url, params)
-    except:
-        arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
-        # Log error
-        if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
-            sys.exit()
-        return -1
-
-    # If there is an error
-    if (response.status != 200):
-        arcpy.AddError("Error getting service status.")
-        # Log error
-        if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Error getting service status.")
-            sys.exit()
-        arcpy.AddError(str(data))
-        return -1
-    if (not assertJsonSuccess(data)):
-        arcpy.AddError("Error getting service status. Please check if the server is running and ensure that the username/password provided are correct.")
-        # Log error
-        if (logging == "true") or (sendErrorEmail == "true"):       
-            loggingFunction(logFile,"error","Error getting service status. Please check if the server is running and ensure that the username/password provided are correct.")
-            sys.exit()
-        return -1
-    # On successful query
-    else: 
-        dataObject = json.loads(data)
-        # Return the real time state
-        return dataObject['realTimeState']
-# End of get service status function
+    
+    # http://gis.mstn.govt.nz/arcgis/admin/services
+# End of check permissions function
 
 
 # Start of get token function
