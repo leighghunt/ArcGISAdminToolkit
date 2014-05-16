@@ -14,6 +14,9 @@ Checks ArcGIS server site and services and reports if site is down and/or partic
 #### ArcGIS Server Permissions (IN DEVELOPMENT)
 Checks ArcGIS server service or folder for any permission changes. 
 
+#### Import ArcGIS Server Users (IN DEVELOPMENT)
+Imports a list of users provided in a CSV file to ArcGIS server, assigning to roles and setting default password.
+
 #### Backup and Restore ArcGIS Server Site
 Backs up or restores an ArcGIS Server site. 
 * Restores an ArcGIS server site from a backup file.
