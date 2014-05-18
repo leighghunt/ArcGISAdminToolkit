@@ -3,7 +3,7 @@
 # Purpose:    Checks ArcGIS server service or folder for any permission changes.     
 # Author:     Shaun Weston (shaun_weston@eagle.co.nz)
 # Date Created:    03/05/2014
-# Last Updated:    03/05/2014
+# Last Updated:    18/05/2014
 # Copyright:   (c) Eagle Technology
 # ArcGIS Version:   10.1/10.2
 # Python Version:   2.7
@@ -33,7 +33,7 @@ emailMessage = ""
 output = None
 
 # Start of main function
-def mainFunction(agsServerSite,username,password,service): # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)  
+def mainFunction(agsServerSite,username,password,service,permissionExpecting): # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)  
     try:
         # Log start
         if (logging == "true") or (sendErrorEmail == "true"):
@@ -61,7 +61,37 @@ def mainFunction(agsServerSite,username,password,service): # Get parameters from
 
         # If token received
         if (token != -1):
-         
+            # Check permissions on service
+            permissionsSet = checkPermissions(serverName, serverPort, protocol, service, token)
+            
+            # If permissions set
+            if (len(permissionsSet) > 0):
+                permissionsNum = 0
+                
+                # Iterate through permissions
+                for permission in permissionsSet:
+                    # If permission expecting is applied to service
+                    if (permissionExpecting == permission):
+                        arcpy.AddMessage(permissionExpecting + " is applied to the service or folder...")
+                        # If logging
+                        if (logging == "true") or (sendErrorEmail == "true"):
+                            loggingFunction(logFile,"info",permissionExpecting + " is applied to the service or folder...")
+                            sys.exit()  
+                        # Add to permissions number
+                        permissionsNum = permissionsNum + 1
+                # If permission is not applied
+                if (permissionsNum == 0):
+                    arcpy.AddWarning(permissionExpecting + " is not applied to the service or folder...")
+                    # If logging
+                    if (logging == "true") or (sendErrorEmail == "true"):
+                        loggingFunction(logFile,"error",permissionExpecting + " is not applied to the service or folder...")
+                        sys.exit()                    
+            else:
+                arcpy.AddWarning("No permissions set to the service or folder...")
+                # If logging
+                if (logging == "true") or (sendErrorEmail == "true"):
+                    loggingFunction(logFile,"warning","No permissions set to the service or folder...")
+                    sys.exit()                 
         # --------------------------------------- End of code --------------------------------------- #  
             
         # If called from gp tool return the arcpy parameter   
@@ -96,14 +126,49 @@ def mainFunction(agsServerSite,username,password,service): # Get parameters from
 
 
 # Start of check permissions function
-def checkPermissions(serverName, serverPort, protocol, token):
+def checkPermissions(serverName, serverPort, protocol, service, token):
     params = urllib.urlencode({'token': token, 'f': 'json'})
 
     # Construct URL to get the service status
     url = "/arcgis/admin/services/" + service + "/permissions"
 
-    
-    # http://gis.mstn.govt.nz/arcgis/admin/services
+    # Post to the server
+    try:
+        response, data = postToServer(serverName, serverPort, protocol, url, params)
+    except:
+        arcpy.AddError("Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Unable to connect to the ArcGIS Server site on " + serverName + ". Please check if the server is running.")
+            sys.exit()
+        return -1
+
+    # If there is an error
+    if (response.status != 200):
+        arcpy.AddError("Error getting checking permissions.")
+        arcpy.AddError(str(data))
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Error checking permissions.")
+            sys.exit()
+        return -1
+    if (not assertJsonSuccess(data)):
+        arcpy.AddError("Error checking permissions. Please check if the server is running and ensure that the username/password provided are correct.")
+        # Log error
+        if (logging == "true") or (sendErrorEmail == "true"):       
+            loggingFunction(logFile,"error","Error checking permissions. Please check if the server is running and ensure that the username/password provided are correct.")  
+            sys.exit()
+        return -1
+    # On successful query
+    else: 
+        dataObject = json.loads(data)
+        permissionGroupsApplied = []
+
+        # Iterate through permission groups
+        for permission in dataObject['permissions']:
+            # Add permission to list
+            permissionGroupsApplied.append(permission['principal'])
+        return permissionGroupsApplied
 # End of check permissions function
 
 

@@ -11,7 +11,7 @@ Caches a map service at specified scales and reports on progress. Ability to als
 #### ArcGIS Server Availability
 Checks ArcGIS server site and services and reports if site is down and/or particular service is down. This tool should be setup as an automated task on the server.
 
-#### ArcGIS Server Permissions (IN DEVELOPMENT)
+#### ArcGIS Server Permissions
 Checks ArcGIS server service or folder for any permission changes. 
 
 #### Import ArcGIS Server Users (IN DEVELOPMENT)
