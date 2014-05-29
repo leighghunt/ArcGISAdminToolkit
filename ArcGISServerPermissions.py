@@ -76,7 +76,6 @@ def mainFunction(agsServerSite,username,password,service,permissionExpecting): #
                         # If logging
                         if (logging == "true") or (sendErrorEmail == "true"):
                             loggingFunction(logFile,"info",permissionExpecting + " is applied to the service or folder...")
-                            sys.exit()  
                         # Add to permissions number
                         permissionsNum = permissionsNum + 1
                 # If permission is not applied
@@ -90,8 +89,7 @@ def mainFunction(agsServerSite,username,password,service,permissionExpecting): #
                 arcpy.AddWarning("No permissions set to the service or folder...")
                 # If logging
                 if (logging == "true") or (sendErrorEmail == "true"):
-                    loggingFunction(logFile,"warning","No permissions set to the service or folder...")
-                    sys.exit()                 
+                    loggingFunction(logFile,"warning","No permissions set to the service or folder...")               
         # --------------------------------------- End of code --------------------------------------- #  
             
         # If called from gp tool return the arcpy parameter   

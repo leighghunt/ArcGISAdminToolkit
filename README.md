@@ -14,7 +14,12 @@ Checks ArcGIS server site and services and reports if site is down and/or partic
 #### ArcGIS Server Permissions
 Checks ArcGIS server service or folder for any permission changes. 
 
-#### Import ArcGIS Server Users (IN DEVELOPMENT)
+#### Action Windows Service
+Restarts the windows service specified.
+	- "C:\Temp\scsList.txt" to get the service names.
+	- Needs to be run as administrator
+
+#### Import ArcGIS Server Users
 Imports a list of users provided in a CSV file to ArcGIS server, assigning to roles and setting default password.
 
 #### Backup and Restore ArcGIS Server Site
