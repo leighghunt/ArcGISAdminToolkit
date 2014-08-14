@@ -78,7 +78,7 @@ def mainFunction(mapService,updateMode,tileScheme): # Get parameters from ArcGIS
                 return output
         # Log start
         if logInfo == "true":
-            loggingFunction(logFile,"end","")
+            loggingFunction(logFile, "end", "")
         pass
     # If arcpy error
     except arcpy.ExecuteError:
@@ -86,18 +86,18 @@ def mainFunction(mapService,updateMode,tileScheme): # Get parameters from ArcGIS
         arcpy.AddError(arcpy.GetMessages(2))
         # Log error
         if logInfo == "true":
-            loggingFunction(logFile,"error",arcpy.GetMessages(2))
+            loggingFunction(logFile, "error", arcpy.GetMessages(2))
     # If python error
     except Exception as e:
         # Show the message
         arcpy.AddError(e.args[0])
         # Log error
         if logInfo == "true":
-            loggingFunction(logFile,"error",e.args[0])
+            loggingFunction(logFile, "error", e.args[0])
 # End of main function
 
 # Start of logging function
-def loggingFunction(logFile,result,info):
+def loggingFunction(logFile, result, info):
     #Get the time/date
     setDateTime = datetime.datetime.now()
     currentDateTime = setDateTime.strftime("%d/%m/%Y - %H:%M:%S")
@@ -122,7 +122,7 @@ def loggingFunction(logFile,result,info):
         if sendEmail == "true":
             arcpy.AddMessage("Sending email...")
             # Server and port information
-            smtpserver = smtplib.SMTP("smtp.gmail.com",587)
+            smtpserver = smtplib.SMTP("smtp.gmail.com", 587)
             smtpserver.ehlo()
             smtpserver.starttls()
             smtpserver.ehlo
@@ -145,4 +145,3 @@ if __name__ == '__main__':
     argv = tuple(arcpy.GetParameterAsText(i)
         for i in range(arcpy.GetArgumentCount()))
     mainFunction(*argv)
-
