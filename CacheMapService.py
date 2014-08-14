@@ -30,11 +30,13 @@ emailMessage = ""
 output = None
 
 # Start of main function
-def mainFunction(mapService,updateMode,tileScheme): # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)
+
+
+def mainFunction(mapService, updateMode, tileScheme):  # Get parameters from ArcGIS Desktop tool by seperating by comma e.g. (var1 is 1st parameter,var2 is 2nd parameter,var3 is 3rd parameter)
     try:
         # Log start
         if logInfo == "true":
-            loggingFunction(logFile,"start","")
+            loggingFunction(logFile, "start", "")
 
         # --------------------------------------- Start of code --------------------------------------- #
 
@@ -97,6 +99,8 @@ def mainFunction(mapService,updateMode,tileScheme): # Get parameters from ArcGIS
 # End of main function
 
 # Start of logging function
+
+
 def loggingFunction(logFile, result, info):
     #Get the time/date
     setDateTime = datetime.datetime.now()
@@ -143,5 +147,5 @@ def loggingFunction(logFile, result, info):
 if __name__ == '__main__':
     # Arguments are optional - If running from ArcGIS Desktop tool, parameters will be loaded into *argv
     argv = tuple(arcpy.GetParameterAsText(i)
-        for i in range(arcpy.GetArgumentCount()))
+                 for i in range(arcpy.GetArgumentCount()))
     mainFunction(*argv)
